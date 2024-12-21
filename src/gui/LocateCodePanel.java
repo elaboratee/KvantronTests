@@ -187,7 +187,9 @@ public class LocateCodePanel extends JPanel {
             @Override
             public void windowClosed(WindowEvent e) {
                 super.windowClosed(e);
-                recognizeBarcodeButton.setEnabled(true);
+                if (!points.isEmpty()) {
+                    recognizeBarcodeButton.setEnabled(true);
+                }
             }
         });
         imageFrame.add(imagePanel);
