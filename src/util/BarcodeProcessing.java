@@ -8,6 +8,7 @@ import java.awt.image.BufferedImage;
 
 
 public class BarcodeProcessing {
+
     public static BufferedImage processBarcode(BufferedImage image,
                                                int minX, int minY,
                                                int width, int height) {
@@ -22,6 +23,6 @@ public class BarcodeProcessing {
             System.err.println("Штрих-код не найден");
         }
 
-        return DataConversion.binaryBitmapToBufferedImage(bitmap);
+        return DataConversions.binaryBitmapToBufferedImage(bitmap);
     }
 }

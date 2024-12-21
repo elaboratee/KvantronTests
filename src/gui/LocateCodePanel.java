@@ -3,13 +3,12 @@ package gui;
 import exception.ImageReadException;
 import org.opencv.core.Mat;
 import util.BarcodeProcessing;
-import util.DataConversion;
+import util.DataConversions;
 import util.ImageIO;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.Dimension;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -162,7 +161,7 @@ public class LocateCodePanel extends JPanel {
     }
 
     private void recognizeBarcode() {
-        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(DataConversion.matToBufferedImage(image),
+        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(DataConversions.matToBufferedImage(image),
                                                                         minX, minY, width, height);
         JLabel bitmapLabel = new JLabel();
 
@@ -203,7 +202,7 @@ public class LocateCodePanel extends JPanel {
 
     private void displayImage(Mat image, JLabel label) {
         // Получение оригинальных размеров изображения
-        BufferedImage bufferedImage = DataConversion.matToBufferedImage(image);
+        BufferedImage bufferedImage = DataConversions.matToBufferedImage(image);
 
         // Установка изображения на JLabel
         ImageIcon imageIcon = new ImageIcon(bufferedImage);

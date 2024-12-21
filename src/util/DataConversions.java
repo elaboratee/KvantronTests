@@ -6,7 +6,7 @@ import org.opencv.core.Mat;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class DataConversion {
+public class DataConversions {
     public static BufferedImage matToBufferedImage(Mat mat) {
         int type;
         if (mat.channels() == 1) {
