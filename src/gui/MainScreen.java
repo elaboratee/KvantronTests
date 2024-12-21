@@ -10,10 +10,10 @@ public class MainScreen extends JFrame {
     public static void showMainScreen() {
         // Настройка фрейма
         JFrame frame = new JFrame("Kvantron Tests");
+        frame.setSize(getScreenWidth() / 2, getScreenHeight() / 2);
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocation(getScreenCenter());
-        frame.setSize(getScreenWidth() / 2, getScreenHeight() / 2);
+        frame.setLocationRelativeTo(null);
 
         // Установка иконки
         ImageIcon imageIcon = new ImageIcon("media/app/logo.png");
@@ -30,13 +30,6 @@ public class MainScreen extends JFrame {
         frame.setVisible(true);
     }
 
-    // Метод для получения центра экрана
-    private static Point getScreenCenter() {
-        return new Point(
-                getScreenWidth() / 2 - getScreenWidth() / 4,
-                getScreenHeight() / 2 - getScreenHeight() / 4
-        );
-    }
 
     // Метод для получения ширины экрана
     private static int getScreenWidth() {
