@@ -7,10 +7,7 @@ import util.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
@@ -114,18 +111,31 @@ public class LocateCodePanel extends JPanel {
                 JPanel imagePanel = new JPanel(new BorderLayout());
                 imagePanel.add(imageLabel, BorderLayout.CENTER);
 
-                // Создание окно для отображения изображения
-                JFrame imageFrame = new JFrame("Загруженное изображение");
-                imageFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                // Создание фрейма для изображения
+                JFrame imageFrame = createImageFrame();
                 imageFrame.add(imagePanel);
                 imageFrame.pack();
-                imageFrame.setResizable(false);
                 imageFrame.setVisible(true);
-
             } catch (ImageReadException ire) {
                 showErrorDialog(ire.getMessage());
             }
         }
+    }
+
+    private JFrame createImageFrame() {
+        // Создание окна для отображения изображения
+        JFrame imageFrame = new JFrame("Загруженное изображение");
+        imageFrame.setResizable(false);
+        imageFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        imageFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                super.windowClosed(e);
+                loadImageButton.setEnabled(true);
+            }
+        });
+
+        return imageFrame;
     }
 
     private void clearPoints() {
