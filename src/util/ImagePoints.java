@@ -7,15 +7,12 @@ import java.util.List;
 public class ImagePoints {
 
     public static List<Point> points = new ArrayList<>(4);
-    public static int width;
-    public static int height;
-    public static int maxX;
-    public static int maxY;
-    public static int minX;
-    public static int minY;
+    public static int width, height;
+    public static int maxX, maxY;
+    public static int minX, minY;
 
-    //Необходимо для рисования (не для вычисления координат)
-    public static void sortedPoints() {
+    // Необходимо для рисования (не для вычисления координат)
+    public static void sortPoints() {
         // Вычисляем центр всех точек
         double centerX = points.stream().mapToDouble(p -> p.x).average().orElse(0);
         double centerY = points.stream().mapToDouble(p -> p.y).average().orElse(0);
@@ -28,11 +25,9 @@ public class ImagePoints {
         });
     }
 
-    public static void findBordersBarcode() {
-        maxX = Integer.MIN_VALUE;
-        maxY = Integer.MIN_VALUE;
-        minX = Integer.MAX_VALUE;
-        minY = Integer.MAX_VALUE;
+    public static void findBarcodeBorders() {
+        maxX = maxY = Integer.MIN_VALUE;
+        minX = minY = Integer.MAX_VALUE;
         for (Point point : points) {
             if (point.getX() > maxX) maxX = (int) point.getX();
             if (point.getY() > maxY) maxY = (int) point.getY();

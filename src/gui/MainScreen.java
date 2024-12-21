@@ -2,6 +2,7 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 
 public class MainScreen extends JFrame {
 
@@ -17,7 +18,9 @@ public class MainScreen extends JFrame {
         frame.setLocationRelativeTo(null);
 
         // Установка иконки
-        ImageIcon imageIcon = new ImageIcon("media/app/logo.png");
+        ImageIcon imageIcon = new ImageIcon(
+                "media" + File.separator + "app" + File.separator + "logo.png"
+        );
         frame.setIconImage(imageIcon.getImage());
 
         // Создание панели выделения кода
@@ -30,7 +33,6 @@ public class MainScreen extends JFrame {
         frame.add(tabbedPane, BorderLayout.CENTER);
         frame.setVisible(true);
     }
-
 
     // Метод для получения ширины экрана
     private static int getScreenWidth() {
