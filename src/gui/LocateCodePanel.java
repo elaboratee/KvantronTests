@@ -18,10 +18,9 @@ public class LocateCodePanel extends JPanel {
 
     private JPanel panel, paramPanel, imagePanel;
     private Mat image;
-    private JLabel imageLabel;
-    private JButton loadImageButton;
+    private LocationLabel imageLabel;
+    private JButton loadImageButton, cropImageButton;
     private final Toolkit tk = Toolkit.getDefaultToolkit();
-    private final List<Point> points = new ArrayList<>(4);
 
     private LocateCodePanel() {
     }
@@ -43,11 +42,14 @@ public class LocateCodePanel extends JPanel {
     }
 
     private JPanel createButtonPanel() {
-        JPanel panel = new JPanel(new GridLayout(1, 3, 5, 5));
+        JPanel panel = new JPanel(new GridLayout(2, 1, 5, 5));
         panel.setOpaque(false);
 
         loadImageButton = createButton("Загрузить изображение", e -> loadImage());
+        cropImageButton = createButton("Вырезать код", e -> cropImage());
+
         panel.add(loadImageButton);
+        panel.add(cropImageButton);
 
         return panel;
     }
@@ -64,7 +66,7 @@ public class LocateCodePanel extends JPanel {
         panel.setBackground(new Color(0x181818));
         panel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
 
-        JLabel label = createImageLabel();
+        LocationLabel label = createImageLabel();
 
         JScrollPane scrollPane = new JScrollPane(label);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -78,38 +80,8 @@ public class LocateCodePanel extends JPanel {
         return panel;
     }
 
-    private JLabel createImageLabel() {
-        JLabel label = new LocationLabel();
-        label.addMouseListener(new MouseListener() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (points.size() < 4) {
-                    points.add(new Point(e.getX(), e.getY()));
-                    System.out.println("Point {x = " + e.getX() + ", y = " + e.getY() + "}");
-                    repaint();
-                }
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-
-            }
-        });
+    private LocationLabel createImageLabel() {
+        LocationLabel label = new LocationLabel();
         label.setHorizontalAlignment(SwingConstants.CENTER);
         label.setVerticalAlignment(SwingConstants.CENTER);
         return label;
@@ -126,6 +98,20 @@ public class LocateCodePanel extends JPanel {
                 showErrorDialog(ire.getMessage());
             }
         }
+    }
+
+    private void cropImage() {
+        if (imageLabel.getPoints().size() < 4) {
+            showErrorDialog("Недостаточно точек: " + imageLabel.getPoints().size() + " вместо 4");
+            return;
+        }
+
+        BufferedImage bufferedImage = matToBufferedImage(image);
+
+        Point upperLeft = imageLabel.getPoints().get(0);
+        Point upperRight = imageLabel.getPoints().get(1);
+        Point downRight = imageLabel.getPoints().get(2);
+        Point downLeft = imageLabel.getPoints().get(3);
     }
 
     private JFileChooser createImageFileChooser() {
@@ -161,6 +147,29 @@ public class LocateCodePanel extends JPanel {
 
         // Масштабирование изображения с сохранением пропорций
         Image scaledImage = bufferedImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+
+        // Установка изображения на JLabel
+        ImageIcon imageIcon = new ImageIcon(scaledImage);
+        label.setIcon(imageIcon);
+
+        panel.repaint();
+    }
+
+    private void displayImage(BufferedImage image, JLabel label) {
+        // Получение доступного размера панели
+        int maxWidth = (int) (tk.getScreenSize().width / 2.5);
+        int maxHeight = (int) (tk.getScreenSize().height / 2.0);
+
+        // Расчет новых размеров с сохранением пропорций
+        double widthRatio = (double) maxWidth / image.getWidth();
+        double heightRatio = (double) maxHeight / image.getHeight();
+        double scale = Math.min(widthRatio, heightRatio);
+
+        int newWidth = (int) (image.getWidth() * scale);
+        int newHeight = (int) (image.getHeight() * scale);
+
+        // Масштабирование изображения с сохранением пропорций
+        Image scaledImage = image.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
 
         // Установка изображения на JLabel
         ImageIcon imageIcon = new ImageIcon(scaledImage);
