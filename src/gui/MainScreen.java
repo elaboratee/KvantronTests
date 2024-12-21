@@ -13,6 +13,7 @@ public class MainScreen extends JFrame {
         frame.setSize(getScreenHeight() / 2, getScreenWidth() / 3);
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setResizable(false);
         frame.setLocationRelativeTo(null);
 
         // Установка иконки
