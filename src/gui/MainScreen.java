@@ -10,7 +10,7 @@ public class MainScreen extends JFrame {
     public static void showMainScreen() {
         // Настройка фрейма
         JFrame frame = new JFrame("Kvantron Tests");
-        frame.setSize(getScreenWidth() / 2, getScreenHeight() / 2);
+        frame.setSize(getScreenHeight() / 2, getScreenWidth() / 3);
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);

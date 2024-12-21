@@ -11,8 +11,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+
+import static gui.LocationLabel.points;
 
 public class LocateCodePanel extends JPanel {
 
@@ -20,8 +23,11 @@ public class LocateCodePanel extends JPanel {
     private Mat image;
     private JLabel imageLabel;
     private JButton loadImageButton;
+    private JButton clearPointsButton;
+    private JButton recognizeBarcodeButton;
+    private JLabel locationLabel;
+    private boolean loadingImage = false;
     private final Toolkit tk = Toolkit.getDefaultToolkit();
-    private final List<Point> points = new ArrayList<>(4);
 
     private LocateCodePanel() {
     }
@@ -31,23 +37,28 @@ public class LocateCodePanel extends JPanel {
     }
 
     public JPanel getLocateCodePanel() {
-        panel = new JPanel(new GridLayout(1, 2, 10, 10));
+        panel = new JPanel();
 
         paramPanel = createButtonPanel();
-        imagePanel = createImagePanel();
+
 
         panel.add(paramPanel);
-        panel.add(imagePanel);
+
 
         return panel;
     }
 
     private JPanel createButtonPanel() {
-        JPanel panel = new JPanel(new GridLayout(1, 3, 5, 5));
+        JPanel panel = new JPanel(new GridLayout(2, 4, 0, 0));
         panel.setOpaque(false);
 
         loadImageButton = createButton("Загрузить изображение", e -> loadImage());
+        clearPointsButton = createButton("Очистить точки", e -> clearPoints());
+        recognizeBarcodeButton = createButton("Распознать", e -> clearPoints());
+
         panel.add(loadImageButton);
+        panel.add(clearPointsButton);
+        panel.add(recognizeBarcodeButton);
 
         return panel;
     }
@@ -55,44 +66,28 @@ public class LocateCodePanel extends JPanel {
     private JButton createButton(String text, ActionListener action) {
         JButton button = new JButton(text);
         button.addActionListener(action);
-        button.setPreferredSize(new Dimension(75, 20));
+        button.setPreferredSize(new Dimension(200, 100));
         return button;
     }
 
-    private JPanel createImagePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(0x181818));
-        panel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
-
-        JLabel label = createImageLabel();
-
-        JScrollPane scrollPane = new JScrollPane(label);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getViewport().setBackground(new Color(0x181818));
-        panel.add(scrollPane, BorderLayout.CENTER);
-
-        imageLabel = label;
-
-        return panel;
-    }
 
     private JLabel createImageLabel() {
-        JLabel label = new LocationLabel();
-        label.addMouseListener(new MouseListener() {
+        locationLabel= new LocationLabel();
+        locationLabel.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (points.size() < 4) {
-                    points.add(new Point(e.getX(), e.getY()));
-                    System.out.println("Point {x = " + e.getX() + ", y = " + e.getY() + "}");
-                    repaint();
-                }
+
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
-
+                if (points.size() < 4 && loadingImage) {
+                    points.add(new Point(e.getX(), e.getY()));
+                    System.out.println("Point {x = " + e.getX() + ", y = " + e.getY() + "}");
+                    locationLabel.repaint();
+                } else if (points.size() >= 4){
+                    System.out.println("Штрих-код уже обведен");
+                }
             }
 
             @Override
@@ -110,10 +105,11 @@ public class LocateCodePanel extends JPanel {
 
             }
         });
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setVerticalAlignment(SwingConstants.CENTER);
-        return label;
+        locationLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        locationLabel.setVerticalAlignment(SwingConstants.CENTER);
+        return locationLabel;
     }
+
 
     private void loadImage() {
         JFileChooser fileChooser = createImageFileChooser();
@@ -121,16 +117,44 @@ public class LocateCodePanel extends JPanel {
             String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
             try {
                 image = ImageIO.loadImage(imagePath);
+                loadingImage = true;
+
+                // Сначала создаем imageLabel
+                imageLabel = createImageLabel();
+                // Отображаем изображение в imageLabel
                 displayImage(image, imageLabel);
+
+                // Теперь создаем панель для изображения и добавляем imageLabel в нее
+                JPanel imagePanel = new JPanel(new BorderLayout());
+                imagePanel.add(imageLabel, BorderLayout.CENTER);
+
+                // Создаем окно для отображения изображения
+                JFrame imageFrame = new JFrame("Загруженное изображение");
+                imageFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);  // Закрытие окна
+                imageFrame.add(imagePanel);
+                imageFrame.pack();  // Автоматически подгоняет размер окна под содержимое
+                imageFrame.setVisible(true);  // Показываем окно с изображением
+
             } catch (ImageReadException ire) {
                 showErrorDialog(ire.getMessage());
             }
         }
     }
 
+    private void clearPoints() {
+        points.clear();
+        locationLabel.repaint();
+        System.out.println("Точки очищены");
+    }
+
+    private void recognizeBarcode(){
+
+    }
+
     private JFileChooser createImageFileChooser() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Выберите изображение");
+        fileChooser.setCurrentDirectory(new File("C:\\KvantronTests\\media\\distorted_datamatrix"));
         fileChooser.setFileFilter(new FileNameExtensionFilter(
                 "Изображения (JPG, PNG, BMP)", "jpg", "jpeg", "png", "bmp")
         );
@@ -144,26 +168,9 @@ public class LocateCodePanel extends JPanel {
     private void displayImage(Mat image, JLabel label) {
         // Получение оригинальных размеров изображения
         BufferedImage bufferedImage = matToBufferedImage(image);
-        int originalWidth = bufferedImage.getWidth();
-        int originalHeight = bufferedImage.getHeight();
-
-        // Получение доступного размера панели
-        int maxWidth = (int) (tk.getScreenSize().width / 2.5);
-        int maxHeight = (int) (tk.getScreenSize().height / 2.0);
-
-        // Расчет новых размеров с сохранением пропорций
-        double widthRatio = (double) maxWidth / originalWidth;
-        double heightRatio = (double) maxHeight / originalHeight;
-        double scale = Math.min(widthRatio, heightRatio);
-
-        int newWidth = (int) (originalWidth * scale);
-        int newHeight = (int) (originalHeight * scale);
-
-        // Масштабирование изображения с сохранением пропорций
-        Image scaledImage = bufferedImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
 
         // Установка изображения на JLabel
-        ImageIcon imageIcon = new ImageIcon(scaledImage);
+        ImageIcon imageIcon = new ImageIcon(bufferedImage);
         label.setIcon(imageIcon);
 
         panel.repaint();
