@@ -1,8 +1,5 @@
 package gui;
 
-import com.google.zxing.*;
-import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
-import com.google.zxing.common.HybridBinarizer;
 import exception.ImageReadException;
 import org.opencv.core.Mat;
 import util.BarcodeProcessing;
@@ -17,7 +14,8 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
-import static gui.LocationLabel.points;
+import static util.ImagePoints.*;
+
 
 public class LocateCodePanel extends JPanel {
 
@@ -78,9 +76,11 @@ public class LocateCodePanel extends JPanel {
                 if (points.size() < 4 && image != null) {
                     points.add(new Point(e.getX(), e.getY()));
                     System.out.println("Point {x = " + e.getX() + ", y = " + e.getY() + "}");
+                    if (points.size() == 4) {
+                        recognizeBarcodeButton.setEnabled(true);
+                    }
                     locationLabel.repaint();
-                } else if (points.size() >= 4){
-                    recognizeBarcodeButton.setEnabled(true);
+                } else {
                     System.out.println("Штрих-код уже обведен");
                 }
 
@@ -108,6 +108,7 @@ public class LocateCodePanel extends JPanel {
                 // Отключаем кнопку загрузки
                 loadImageButton.setEnabled(false);
 
+
                 // Создание JLabel для изображения
                 imageLabel = createImageLabel();
 
@@ -126,6 +127,7 @@ public class LocateCodePanel extends JPanel {
                     public void windowClosed(WindowEvent e) {
                         super.windowClosed(e);
                         loadImageButton.setEnabled(true);
+                        recognizeBarcodeButton.setEnabled(true);
                     }
                 });
 
@@ -141,6 +143,7 @@ public class LocateCodePanel extends JPanel {
     private JFrame createImageFrame(String title) {
         // Создание окна для отображения изображения
         JFrame imageFrame = new JFrame(title);
+
         imageFrame.setResizable(false);
         imageFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         return imageFrame;
@@ -150,6 +153,7 @@ public class LocateCodePanel extends JPanel {
         if (!points.isEmpty()) {
             points.clear();
             clearPointsButton.setEnabled(false);
+            recognizeBarcodeButton.setEnabled(false);
             locationLabel.repaint();
             System.out.println("Точки очищены");
         } else {
@@ -158,8 +162,29 @@ public class LocateCodePanel extends JPanel {
     }
 
     private void recognizeBarcode() {
-        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(DataConversion.matToBufferedImage(image));
+        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(DataConversion.matToBufferedImage(image),
+                                                                        minX, minY, width, height);
+        JLabel bitmapLabel = new JLabel();
 
+        displayBitmapImage(barcodeBitmap, bitmapLabel);
+        JPanel imagePanel = new JPanel(new BorderLayout());
+        imagePanel.add(bitmapLabel, BorderLayout.CENTER);
+
+        JFrame imageFrame = createImageFrame("Bitmap barcode");
+
+        imageFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                super.windowClosed(e);
+                recognizeBarcodeButton.setEnabled(true);
+            }
+        });
+
+        imageFrame.add(imagePanel);
+        imageFrame.pack();
+        imageFrame.setVisible(true);
+
+        recognizeBarcodeButton.setEnabled(false);
     }
 
     private JFileChooser createImageFileChooser() {
@@ -182,6 +207,13 @@ public class LocateCodePanel extends JPanel {
 
         // Установка изображения на JLabel
         ImageIcon imageIcon = new ImageIcon(bufferedImage);
+        label.setIcon(imageIcon);
+    }
+
+    private void displayBitmapImage(BufferedImage image, JLabel label) {
+
+        // Установка изображения на JLabel
+        ImageIcon imageIcon = new ImageIcon(image);
         label.setIcon(imageIcon);
     }
 }

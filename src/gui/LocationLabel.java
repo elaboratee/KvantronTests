@@ -1,14 +1,17 @@
 package gui;
 
+import util.ImagePoints;
+
 import javax.swing.*;
 import java.awt.*;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static util.ImagePoints.points;
+
 public class LocationLabel extends JLabel {
 
-    public static List<Point> points = new ArrayList<>(4);
 
     @Override
     public void paint(Graphics g) {
@@ -22,27 +25,18 @@ public class LocationLabel extends JLabel {
         g2.setColor(Color.RED);
         if (points.size() == 4) {
             // Сортируем точки
-//            sortPointList();
-
+            ImagePoints.sortedPoints();
+            ImagePoints.findBordersBarcode();
             g2.drawLine(points.get(0).x, points.get(0).y, points.get(1).x, points.get(1).y);
             g2.drawLine(points.get(1).x, points.get(1).y, points.get(2).x, points.get(2).y);
             g2.drawLine(points.get(2).x, points.get(2).y, points.get(3).x, points.get(3).y);
             g2.drawLine(points.get(3).x, points.get(3).y, points.get(0).x, points.get(0).y);
+            for (Point point : points) {
+                System.out.println(point);
+            }
         }
     }
 
-    private void sortPointList() {
-        points.sort((p1, p2) -> {
-            if (p1.y != p2.y) {
-                return Integer.compare(p1.y, p2.y);
-            }
-            return Integer.compare(p1.x, p2.x);
-        });
 
-        Point topRight = points.get(1).x > points.get(2).x ? points.get(2) : points.get(1);
-        Point bottomRight = points.get(1).x > points.get(2).x ? points.get(1) : points.get(2);
 
-        points.set(1, topRight);
-        points.set(2, bottomRight);
-    }
 }
