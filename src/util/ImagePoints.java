@@ -29,17 +29,10 @@ public class ImagePoints {
         maxX = maxY = Integer.MIN_VALUE;
         minX = minY = Integer.MAX_VALUE;
         for (Point point : points) {
-            if (point.getX() > maxX) {
-                maxX = (int) point.getX();
-            } else if (point.getX() < minX) {
-                minX = (int) point.getX();
-            }
-
-            if (point.getY() > maxY) {
-                maxY = (int) point.getY();
-            } else if (point.getY() < minY) {
-                minY = (int) point.getY();
-            }
+            if (point.getX() > maxX) maxX = (int) point.getX();
+            if (point.getY() > maxY) maxY = (int) point.getY();
+            if (point.getX() < minX) minX = (int) point.getX();
+            if (point.getY() < minY) minY = (int) point.getY();
         }
         System.out.println("maxX: " + maxX + "\nminX:" + minX + "\nmaxY: " + maxY + "\nminY:" + minY);
         width = maxX - minX;
