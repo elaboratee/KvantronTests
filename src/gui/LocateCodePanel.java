@@ -1,12 +1,18 @@
 package gui;
 
+import com.google.zxing.*;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
 import exception.ImageReadException;
 import org.opencv.core.Mat;
+import util.BarcodeProcessing;
+import util.DataConversion;
 import util.ImageIO;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
+import java.awt.Dimension;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -74,6 +80,7 @@ public class LocateCodePanel extends JPanel {
                     System.out.println("Point {x = " + e.getX() + ", y = " + e.getY() + "}");
                     locationLabel.repaint();
                 } else if (points.size() >= 4){
+                    recognizeBarcodeButton.setEnabled(true);
                     System.out.println("Штрих-код уже обведен");
                 }
 
@@ -112,7 +119,16 @@ public class LocateCodePanel extends JPanel {
                 imagePanel.add(imageLabel, BorderLayout.CENTER);
 
                 // Создание фрейма для изображения
-                JFrame imageFrame = createImageFrame();
+                JFrame imageFrame = createImageFrame("Загруженное изображение");
+
+                imageFrame.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        super.windowClosed(e);
+                        loadImageButton.setEnabled(true);
+                    }
+                });
+
                 imageFrame.add(imagePanel);
                 imageFrame.pack();
                 imageFrame.setVisible(true);
@@ -122,19 +138,11 @@ public class LocateCodePanel extends JPanel {
         }
     }
 
-    private JFrame createImageFrame() {
+    private JFrame createImageFrame(String title) {
         // Создание окна для отображения изображения
-        JFrame imageFrame = new JFrame("Загруженное изображение");
+        JFrame imageFrame = new JFrame(title);
         imageFrame.setResizable(false);
         imageFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        imageFrame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-                super.windowClosed(e);
-                loadImageButton.setEnabled(true);
-            }
-        });
-
         return imageFrame;
     }
 
@@ -150,6 +158,7 @@ public class LocateCodePanel extends JPanel {
     }
 
     private void recognizeBarcode() {
+        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(DataConversion.matToBufferedImage(image));
 
     }
 
@@ -169,31 +178,10 @@ public class LocateCodePanel extends JPanel {
 
     private void displayImage(Mat image, JLabel label) {
         // Получение оригинальных размеров изображения
-        BufferedImage bufferedImage = matToBufferedImage(image);
+        BufferedImage bufferedImage = DataConversion.matToBufferedImage(image);
 
         // Установка изображения на JLabel
         ImageIcon imageIcon = new ImageIcon(bufferedImage);
         label.setIcon(imageIcon);
-    }
-
-    private BufferedImage matToBufferedImage(Mat mat) {
-        int type;
-        if (mat.channels() == 1) {
-            type = BufferedImage.TYPE_BYTE_GRAY;
-        } else if (mat.channels() == 3) {
-            type = BufferedImage.TYPE_3BYTE_BGR;
-        } else {
-            throw new IllegalArgumentException("Не поддерживаемое количество каналов матрицы: " + mat.channels());
-        }
-
-        int width = mat.width();
-        int height = mat.height();
-        int channels = mat.channels();
-        byte[] data = new byte[width * height * channels];
-
-        mat.get(0, 0, data);
-        BufferedImage bufferedImage = new BufferedImage(width, height, type);
-        bufferedImage.getRaster().setDataElements(0, 0, width, height, data);
-        return bufferedImage;
     }
 }
