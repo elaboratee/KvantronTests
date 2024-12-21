@@ -43,7 +43,7 @@ public class LocateCodePanel extends JPanel {
     }
 
     private JPanel createButtonPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 4, 0, 0));
+        JPanel panel = new JPanel(new GridLayout(2, 2, 0, 0));
         panel.setOpaque(false);
 
         loadImageButton = createButton("Загрузить изображение", e -> loadImage());
@@ -107,7 +107,6 @@ public class LocateCodePanel extends JPanel {
                 // Отключаем кнопку загрузки
                 loadImageButton.setEnabled(false);
 
-
                 // Создание JLabel для изображения
                 imageLabel = createImageLabel();
 
@@ -126,7 +125,7 @@ public class LocateCodePanel extends JPanel {
                     public void windowClosed(WindowEvent e) {
                         super.windowClosed(e);
                         loadImageButton.setEnabled(true);
-                        recognizeBarcodeButton.setEnabled(true);
+                        recognizeBarcodeButton.setEnabled(false);
                     }
                 });
 

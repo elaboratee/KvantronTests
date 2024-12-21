@@ -14,6 +14,7 @@ public class ImagePoints {
     public static int minX;
     public static int minY;
 
+    //Необходимо для рисования (не для вычисления координат)
     public static void sortedPoints() {
         // Вычисляем центр всех точек
         double centerX = points.stream().mapToDouble(p -> p.x).average().orElse(0);
