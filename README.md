@@ -72,7 +72,7 @@ public class BarcodeProcessing {
 ```java 
 LuminanceSource source = new BufferedImageLuminanceSource(image, minX, minY, width, height);
 ```
-Класс ```BufferedImageLuminanceSource```
+### Класс ```BufferedImageLuminanceSource```
 ```java
 public final class BufferedImageLuminanceSource extends LuminanceSource {
 
