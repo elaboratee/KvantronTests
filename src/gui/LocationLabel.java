@@ -15,7 +15,7 @@ public class LocationLabel extends JLabel {
         Graphics2D g2 = (Graphics2D) g;
 
         // Настройка кисти
-        g2.setColor(new Color(0x00FFFF));
+        g2.setColor(Color.RED);
         g2.setStroke(new BasicStroke(3));
 
         // Отрисовка точек
