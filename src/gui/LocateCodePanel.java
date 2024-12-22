@@ -179,6 +179,7 @@ public class LocateCodePanel extends JPanel {
                 imageFrame.add(imagePanel);
                 imageFrame.pack();
                 imageFrame.setVisible(true);
+                imageFrame.setLocationRelativeTo(null);
             } catch (ImageReadException ire) {
                 showErrorDialog(ire.getMessage());
             }
@@ -235,6 +236,7 @@ public class LocateCodePanel extends JPanel {
 
         imageFrame.pack();
         imageFrame.setVisible(true);
+        imageFrame.setLocationRelativeTo(null);
     }
 
     private JFileChooser createImageFileChooser() {

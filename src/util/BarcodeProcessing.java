@@ -19,9 +19,9 @@ public class BarcodeProcessing {
 
         try {
             Result result = new MultiFormatReader().decode(bitmap);
-            LocateCodePanel.getActionLog().append("Текст штрих-кода: " + result.getText());
+            LocateCodePanel.getActionLog().append("Текст штрих-кода: " + result.getText() + "\n");
         } catch (NotFoundException e) {
-            LocateCodePanel.getActionLog().append("Штрих-код не найден");
+            LocateCodePanel.getActionLog().append("Штрих-код не найден\n");
         }
 
         return DataConversions.binaryBitmapToBufferedImage(bitmap);
