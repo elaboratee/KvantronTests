@@ -125,7 +125,6 @@ public class LocateCodePanel extends JPanel {
             public void mousePressed(MouseEvent e) {
                 if (points.size() < 4 && image != null) {
                     points.add(new Point(e.getX(), e.getY()));
-                    logAction("Point {x = " + e.getX() + ", y = " + e.getY() + "}");
                     if (points.size() == 4) {
                         recognizeBarcodeButton.setEnabled(true);
                     }
