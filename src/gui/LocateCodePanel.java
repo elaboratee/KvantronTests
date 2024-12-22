@@ -201,7 +201,7 @@ public class LocateCodePanel extends JPanel {
     private JFileChooser createImageFileChooser() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Выберите изображение");
-        fileChooser.setCurrentDirectory(new File("media" + File.separator + "distorted_datamatrix"));
+        fileChooser.setCurrentDirectory(new File("media" + File.separator + "codes"));
         fileChooser.setFileFilter(new FileNameExtensionFilter(
                 "Изображения (JPG, PNG, BMP)", "jpg", "jpeg", "png", "bmp")
         );
