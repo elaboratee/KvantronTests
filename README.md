@@ -283,3 +283,49 @@ public BufferedImageLuminanceSource(BufferedImage image, int left, int top, int 
         image.getRGB(left, y, width, 1, buffer, 0, sourceWidth);
         for (int x = 0; x < width; x++) {
 ```
+
+# Если передавать только координаты в декодер из общего изображения после пороговой обработки:
+Каждый локализованный штрих-код имеет свои координаты, поэтому для координат каждого кода необходимо выполнить следующие действия:
+``` java
+public static void findBarcodeBorders() {
+        maxX = maxY = Integer.MIN_VALUE;
+        minX = minY = Integer.MAX_VALUE;
+        for (Point point : points) {
+            if (point.getX() > maxX) maxX = (int) point.getX();
+            if (point.getY() > maxY) maxY = (int) point.getY();
+            if (point.getX() < minX) minX = (int) point.getX();
+            if (point.getY() < minY) minY = (int) point.getY();
+        }
+        width = maxX - minX;
+        height = maxY - minY;
+    }
+```
+То есть определить ширину и высоту фрагмента изображения, содержащего штрих код, а также координаты левого верхнего угола.
+![image](https://github.com/user-attachments/assets/b95797b5-cee8-40d3-85ac-eb86815ed7ba)
+
+
+
+Полученный список можно передать в декодер, откуда получим:
+```java
+int[] buffer = new int[width]; // создание массива для строки пикселей
+for (Location codeLocation : codeLocations) { // перебор всех Location для каждого кода
+    for (y = codeLocation.getMinY(); y < codeLocation.getMinY() + codeLocation.getHeight()) {
+        image.getRGB(codeLocation.getMinX, y, width, 1, buffer, 0, width); // Получение строки пикселей
+        for (int x = 0; x < codeLocation.getWidth()) {
+            int pixel = buffer[x]; //получаем пиксель
+            //РЕАЛИЗАЦИЯ ДЕКОДЕРА
+        }
+    }
+}
+```
+где ```getRGB(x, y, width, height, buffer, offset, scansize)``` — это метод, который извлекает пиксели из прямоугольной области изображения и сохраняет их в массив.
+
+- x и y — это координаты верхнего левого угла прямоугольной области изображения, откуда нужно начать извлечение пикселей. В вашем случае codeLocation.getMinX() — это координата X (левая граница), а y — это вертикальная координата.
+
+- width и height — размеры области для извлечения. В вашем примере вы извлекаете строку пикселей, поэтому высота области равна 1, а ширина равна width.
+
+- buffer — это массив целых чисел (int[]), в который будут записаны пиксели из указанной области изображения. Каждый элемент массива будет представлять цвет пикселя в формате ARGB (Alpha, Red, Green, Blue).
+
+- offset — смещение в массиве buffer, с которого начнется запись пикселей. В данном случае это 0, то есть запись начнется с первого элемента массива.
+
+- scansize — это количество элементов массива, которые представляют одну строку пикселей. В вашем случае это будет width, так как вы извлекаете строку пикселей шириной width.  
