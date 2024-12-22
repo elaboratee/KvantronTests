@@ -276,3 +276,10 @@ public BufferedImageLuminanceSource(BufferedImage image, int left, int top, int 
     this.top = top;
   }
 ```
+
+### Перебор пикселей по выделенному изображению выполняется по данному циклу:
+```java
+ for (int y = top; y < top + height; y++) {
+        image.getRGB(left, y, width, 1, buffer, 0, sourceWidth);
+        for (int x = 0; x < width; x++) {
+```
