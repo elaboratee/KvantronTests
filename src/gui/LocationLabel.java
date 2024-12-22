@@ -1,63 +1,40 @@
 package gui;
 
+import util.ImagePoints;
+
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.util.ArrayList;
-import java.util.List;
+
+import static util.ImagePoints.points;
 
 public class LocationLabel extends JLabel {
-
-    private List<Point> points = new ArrayList<>(4);
-
-    public LocationLabel() {
-        addMouseListener(new MouseListener() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (points.size() < 4) {
-                    points.add(new Point(e.getX(), e.getY()));
-                    System.out.println("Point {" + e.getX() + ", " + e.getY() + "}");
-                    repaint();
-                }
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-
-            }
-        });
-    }
-
-    public List<Point> getPoints() {
-        return points;
-    }
 
     @Override
     public void paint(Graphics g) {
         super.paint(g);
         Graphics2D g2 = (Graphics2D) g;
+
+        // Настройка кисти
         g2.setColor(Color.RED);
-        g2.setStroke(new BasicStroke(7.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
-        if (points != null) {
-            for (Point point : points) {
-                g2.drawLine(point.x, point.y, point.x, point.y);
-            }
+        g2.setStroke(new BasicStroke(3));
+
+        // Отрисовка точек
+        for (Point point : points) {
+            g2.fillOval(point.x - 3, point.y - 3, 6, 6); // Рисуем точку
+        }
+
+        if (points.size() == 4) {
+            // Сортировка точек
+            ImagePoints.sortPoints();
+
+            // Поиск границ штрих-кода
+            ImagePoints.findBarcodeBorders();
+
+            // Отрисовка линий
+            g2.drawLine(points.get(0).x, points.get(0).y, points.get(1).x, points.get(1).y);
+            g2.drawLine(points.get(1).x, points.get(1).y, points.get(2).x, points.get(2).y);
+            g2.drawLine(points.get(2).x, points.get(2).y, points.get(3).x, points.get(3).y);
+            g2.drawLine(points.get(3).x, points.get(3).y, points.get(0).x, points.get(0).y);
         }
     }
 }

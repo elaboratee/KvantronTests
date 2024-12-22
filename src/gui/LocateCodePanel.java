@@ -2,121 +2,246 @@ package gui;
 
 import exception.ImageReadException;
 import org.opencv.core.Mat;
+import util.BarcodeProcessing;
+import util.DataConversions;
 import util.ImageIO;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.util.ArrayList;
-import java.util.List;
+import java.io.File;
+
+import static util.ImagePoints.*;
+
 
 public class LocateCodePanel extends JPanel {
 
-    private JPanel panel, paramPanel, imagePanel;
+    private static LocateCodePanel instance;
+
+    private final JPanel buttonPanel, imagePanel, logPanel;
+    private final JLabel locationLabel;
+    private JButton loadImageButton, clearPointsButton, recognizeBarcodeButton;
+    private final JFileChooser fileChooser;
+    private JTextArea actionLog;
     private Mat image;
-    private LocationLabel imageLabel;
-    private JButton loadImageButton, cropImageButton;
-    private final Toolkit tk = Toolkit.getDefaultToolkit();
 
     private LocateCodePanel() {
+        // Создание панели кнопок
+        buttonPanel = createButtonPanel();
+
+        // Создание панели логов
+        logPanel = createLogPanel();
+
+        // Заполнение родительской панели
+        setLayout(new BorderLayout());
+        add(buttonPanel, BorderLayout.NORTH);
+        add(logPanel, BorderLayout.CENTER);
+
+        // Создание панели изображения
+        imagePanel = createImagePanel();
+
+        // Создание лейбла изображения
+        locationLabel = createLocationLabel();
+        imagePanel.add(locationLabel, BorderLayout.CENTER);
+
+        // Создание окна для выбора файлов
+        fileChooser = createImageFileChooser();
     }
 
     public static LocateCodePanel getInstance() {
-        return new LocateCodePanel();
+        if (instance == null) {
+            instance = new LocateCodePanel();
+        }
+        return instance;
     }
 
-    public JPanel getLocateCodePanel() {
-        panel = new JPanel(new GridLayout(1, 2, 10, 10));
+    public static JPanel getLogPanel() {
+        return getInstance().logPanel;
+    }
 
-        paramPanel = createButtonPanel();
-        imagePanel = createImagePanel();
-
-        panel.add(paramPanel);
-        panel.add(imagePanel);
-
-        return panel;
+    public static JTextArea getActionLog() {
+        return getInstance().actionLog;
     }
 
     private JPanel createButtonPanel() {
-        JPanel panel = new JPanel(new GridLayout(2, 1, 5, 5));
+        // Создание панели кнопок
+        JPanel panel = new JPanel(new GridLayout(2, 2, 0, 0));
         panel.setOpaque(false);
 
+        // Создание кнопок и привязка обработчиков событий
         loadImageButton = createButton("Загрузить изображение", e -> loadImage());
-        cropImageButton = createButton("Вырезать код", e -> cropImage());
+        clearPointsButton = createButton("Очистить точки", e -> clearPoints());
+        recognizeBarcodeButton = createButton("Распознать", e -> recognizeBarcode());
 
+        // Выключение кнопок
+        clearPointsButton.setEnabled(false);
+        recognizeBarcodeButton.setEnabled(false);
+
+        // Добавление кнопок на панель
         panel.add(loadImageButton);
-        panel.add(cropImageButton);
+        panel.add(clearPointsButton);
+        panel.add(recognizeBarcodeButton);
 
         return panel;
+    }
+
+    private JPanel createLogPanel() {
+        // Создание панели для логов
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+
+        // Создание текстовой области для логов
+        actionLog = createActionLog();
+        panel.add(new JScrollPane(actionLog), BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private JTextArea createActionLog() {
+        JTextArea textArea = new JTextArea(5, 20);
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        return textArea;
+    }
+
+    private JPanel createImagePanel() {
+        return new JPanel(new BorderLayout());
     }
 
     private JButton createButton(String text, ActionListener action) {
         JButton button = new JButton(text);
         button.addActionListener(action);
-        button.setPreferredSize(new Dimension(75, 20));
+        button.setPreferredSize(new Dimension(200, 100));
         return button;
     }
 
-    private JPanel createImagePanel() {
-        JPanel panel = new JPanel(new BorderLayout());
-        panel.setBackground(new Color(0x181818));
-        panel.setBorder(BorderFactory.createLineBorder(Color.BLACK, 2));
+    private JLabel createLocationLabel() {
+        JLabel locationLabel = new LocationLabel();
+        locationLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (points.size() < 4 && image != null) {
+                    points.add(new Point(e.getX(), e.getY()));
+                    if (points.size() == 4) {
+                        recognizeBarcodeButton.setEnabled(true);
+                    }
+                    locationLabel.repaint();
+                } else {
+                    logAction("Штрих-код уже выделен");
+                }
 
-        LocationLabel label = createImageLabel();
+                // Включаем кнопку очистки точек
+                if (points.size() == 1) {
+                    clearPointsButton.setEnabled(true);
+                }
+            }
+        });
+        locationLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        locationLabel.setVerticalAlignment(SwingConstants.CENTER);
 
-        JScrollPane scrollPane = new JScrollPane(label);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.getViewport().setBackground(new Color(0x181818));
-        panel.add(scrollPane, BorderLayout.CENTER);
-
-        imageLabel = label;
-
-        return panel;
-    }
-
-    private LocationLabel createImageLabel() {
-        LocationLabel label = new LocationLabel();
-        label.setHorizontalAlignment(SwingConstants.CENTER);
-        label.setVerticalAlignment(SwingConstants.CENTER);
-        return label;
+        return locationLabel;
     }
 
     private void loadImage() {
-        JFileChooser fileChooser = createImageFileChooser();
-        if (fileChooser.showOpenDialog(panel) == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showOpenDialog(buttonPanel) == JFileChooser.APPROVE_OPTION) {
             String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
             try {
+                // Загрузка изображения
                 image = ImageIO.loadImage(imagePath);
-                displayImage(image, imageLabel);
+                logAction("\nЗагружено изображение: " + fileChooser.getSelectedFile().getName());
+
+                // Очистка точек после загрузки
+                clearPoints();
+
+                // Отключение кнопки загрузки
+                loadImageButton.setEnabled(false);
+
+                // Отображение изображения
+                displayImage(image, locationLabel);
+
+                // Создание фрейма для изображения
+                JFrame imageFrame = createImageFrame("Loaded Image");
+
+                imageFrame.addWindowListener(new WindowAdapter() {
+                    @Override
+                    public void windowClosed(WindowEvent e) {
+                        super.windowClosed(e);
+                        clearPoints();
+                        loadImageButton.setEnabled(true);
+                        clearPointsButton.setEnabled(false);
+                        recognizeBarcodeButton.setEnabled(false);
+                    }
+                });
+                imageFrame.add(imagePanel);
+                imageFrame.pack();
+                imageFrame.setVisible(true);
+                imageFrame.setLocationRelativeTo(null);
             } catch (ImageReadException ire) {
                 showErrorDialog(ire.getMessage());
             }
         }
     }
 
-    private void cropImage() {
-        if (imageLabel.getPoints().size() < 4) {
-            showErrorDialog("Недостаточно точек: " + imageLabel.getPoints().size() + " вместо 4");
-            return;
+    private JFrame createImageFrame(String title) {
+        // Создание окна для отображения изображения
+        JFrame imageFrame = new JFrame(title);
+        imageFrame.setResizable(false);
+        imageFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        return imageFrame;
+    }
+
+    private void clearPoints() {
+        if (!points.isEmpty()) {
+            points.clear();
+            clearPointsButton.setEnabled(false);
+            recognizeBarcodeButton.setEnabled(false);
+            locationLabel.repaint();
+            logAction("Точки очищены");
+        } else {
+            logAction("Точек нет");
         }
+    }
 
-        BufferedImage bufferedImage = matToBufferedImage(image);
+    private void recognizeBarcode() {
+        recognizeBarcodeButton.setEnabled(false);
 
-        Point upperLeft = imageLabel.getPoints().get(0);
-        Point upperRight = imageLabel.getPoints().get(1);
-        Point downRight = imageLabel.getPoints().get(2);
-        Point downLeft = imageLabel.getPoints().get(3);
+        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(
+                DataConversions.matToBufferedImage(image),
+                minX, minY,
+                width, height
+        );
+
+        JLabel bitmapLabel = new JLabel();
+        displayImage(barcodeBitmap, bitmapLabel);
+
+        JPanel imagePanel = createImagePanel();
+        imagePanel.add(bitmapLabel, BorderLayout.CENTER);
+
+        JFrame imageFrame = createImageFrame("Barcode Bitmap");
+
+        imageFrame.addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                super.windowClosed(e);
+                if (!points.isEmpty()) {
+                    recognizeBarcodeButton.setEnabled(true);
+                }
+            }
+        });
+        imageFrame.add(imagePanel);
+
+        imageFrame.pack();
+        imageFrame.setVisible(true);
+        imageFrame.setLocationRelativeTo(null);
     }
 
     private JFileChooser createImageFileChooser() {
         JFileChooser fileChooser = new JFileChooser();
         fileChooser.setDialogTitle("Выберите изображение");
+        fileChooser.setCurrentDirectory(new File("media" + File.separator + "codes"));
         fileChooser.setFileFilter(new FileNameExtensionFilter(
                 "Изображения (JPG, PNG, BMP)", "jpg", "jpeg", "png", "bmp")
         );
@@ -124,78 +249,26 @@ public class LocateCodePanel extends JPanel {
     }
 
     private void showErrorDialog(String message) {
-        JOptionPane.showMessageDialog(panel, message, "Ошибка", JOptionPane.ERROR_MESSAGE);
+        JOptionPane.showMessageDialog(buttonPanel, message, "Ошибка", JOptionPane.ERROR_MESSAGE);
     }
 
     private void displayImage(Mat image, JLabel label) {
         // Получение оригинальных размеров изображения
-        BufferedImage bufferedImage = matToBufferedImage(image);
-        int originalWidth = bufferedImage.getWidth();
-        int originalHeight = bufferedImage.getHeight();
-
-        // Получение доступного размера панели
-        int maxWidth = (int) (tk.getScreenSize().width / 2.5);
-        int maxHeight = (int) (tk.getScreenSize().height / 2.0);
-
-        // Расчет новых размеров с сохранением пропорций
-        double widthRatio = (double) maxWidth / originalWidth;
-        double heightRatio = (double) maxHeight / originalHeight;
-        double scale = Math.min(widthRatio, heightRatio);
-
-        int newWidth = (int) (originalWidth * scale);
-        int newHeight = (int) (originalHeight * scale);
-
-        // Масштабирование изображения с сохранением пропорций
-        Image scaledImage = bufferedImage.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
+        BufferedImage bufferedImage = DataConversions.matToBufferedImage(image);
 
         // Установка изображения на JLabel
-        ImageIcon imageIcon = new ImageIcon(scaledImage);
+        ImageIcon imageIcon = new ImageIcon(bufferedImage);
         label.setIcon(imageIcon);
-
-        panel.repaint();
     }
 
     private void displayImage(BufferedImage image, JLabel label) {
-        // Получение доступного размера панели
-        int maxWidth = (int) (tk.getScreenSize().width / 2.5);
-        int maxHeight = (int) (tk.getScreenSize().height / 2.0);
-
-        // Расчет новых размеров с сохранением пропорций
-        double widthRatio = (double) maxWidth / image.getWidth();
-        double heightRatio = (double) maxHeight / image.getHeight();
-        double scale = Math.min(widthRatio, heightRatio);
-
-        int newWidth = (int) (image.getWidth() * scale);
-        int newHeight = (int) (image.getHeight() * scale);
-
-        // Масштабирование изображения с сохранением пропорций
-        Image scaledImage = image.getScaledInstance(newWidth, newHeight, Image.SCALE_SMOOTH);
-
         // Установка изображения на JLabel
-        ImageIcon imageIcon = new ImageIcon(scaledImage);
+        ImageIcon imageIcon = new ImageIcon(image);
         label.setIcon(imageIcon);
-
-        panel.repaint();
     }
 
-    private BufferedImage matToBufferedImage(Mat mat) {
-        int type;
-        if (mat.channels() == 1) {
-            type = BufferedImage.TYPE_BYTE_GRAY;
-        } else if (mat.channels() == 3) {
-            type = BufferedImage.TYPE_3BYTE_BGR;
-        } else {
-            throw new IllegalArgumentException("Не поддерживаемое количество каналов матрицы: " + mat.channels());
-        }
-
-        int width = mat.width();
-        int height = mat.height();
-        int channels = mat.channels();
-        byte[] data = new byte[width * height * channels];
-
-        mat.get(0, 0, data);
-        BufferedImage bufferedImage = new BufferedImage(width, height, type);
-        bufferedImage.getRaster().setDataElements(0, 0, width, height, data);
-        return bufferedImage;
+    private void logAction(String action) {
+        actionLog.append(action + "\n");
+        actionLog.setCaretPosition(actionLog.getDocument().getLength());
     }
 }

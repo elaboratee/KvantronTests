@@ -2,6 +2,7 @@ package gui;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 
 public class MainScreen extends JFrame {
 
@@ -10,13 +11,16 @@ public class MainScreen extends JFrame {
     public static void showMainScreen() {
         // Настройка фрейма
         JFrame frame = new JFrame("Kvantron Tests");
+        frame.setSize(getScreenHeight() / 2, getScreenWidth() / 3);
         frame.setLayout(new BorderLayout());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setLocation(getScreenCenter());
-        frame.setSize(getScreenWidth() / 2, getScreenHeight() / 2);
+        frame.setResizable(false);
+        frame.setLocationRelativeTo(null);
 
         // Установка иконки
-        ImageIcon imageIcon = new ImageIcon("media/app/logo.png");
+        ImageIcon imageIcon = new ImageIcon(
+                "media" + File.separator + "app" + File.separator + "logo.png"
+        );
         frame.setIconImage(imageIcon.getImage());
 
         // Создание панели выделения кода
@@ -24,18 +28,10 @@ public class MainScreen extends JFrame {
 
         // Создание панели вкладок
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
-        tabbedPane.addTab("Выделить код на изображении", locateCodePanel.getLocateCodePanel());
+        tabbedPane.addTab("Выделить код на изображении", locateCodePanel);
 
         frame.add(tabbedPane, BorderLayout.CENTER);
         frame.setVisible(true);
-    }
-
-    // Метод для получения центра экрана
-    private static Point getScreenCenter() {
-        return new Point(
-                getScreenWidth() / 2 - getScreenWidth() / 4,
-                getScreenHeight() / 2 - getScreenHeight() / 4
-        );
     }
 
     // Метод для получения ширины экрана
