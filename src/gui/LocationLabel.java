@@ -35,9 +35,6 @@ public class LocationLabel extends JLabel {
             g2.drawLine(points.get(1).x, points.get(1).y, points.get(2).x, points.get(2).y);
             g2.drawLine(points.get(2).x, points.get(2).y, points.get(3).x, points.get(3).y);
             g2.drawLine(points.get(3).x, points.get(3).y, points.get(0).x, points.get(0).y);
-            for (Point point : points) {
-                System.out.println(point);
-            }
         }
     }
 }

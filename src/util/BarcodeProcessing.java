@@ -3,6 +3,7 @@ package util;
 import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
+import gui.LocateCodePanel;
 
 import java.awt.image.BufferedImage;
 
@@ -18,9 +19,9 @@ public class BarcodeProcessing {
 
         try {
             Result result = new MultiFormatReader().decode(bitmap);
-            System.out.println("Текст штрих-кода: " + result.getText());
+            LocateCodePanel.getActionLog().append("Текст штрих-кода: " + result.getText());
         } catch (NotFoundException e) {
-            System.err.println("Штрих-код не найден");
+            LocateCodePanel.getActionLog().append("Штрих-код не найден");
         }
 
         return DataConversions.binaryBitmapToBufferedImage(bitmap);

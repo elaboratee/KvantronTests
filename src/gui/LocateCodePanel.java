@@ -18,15 +18,26 @@ import static util.ImagePoints.*;
 
 public class LocateCodePanel extends JPanel {
 
-    private final JPanel buttonPanel, imagePanel;
+    private static LocateCodePanel instance;
+
+    private final JPanel buttonPanel, imagePanel, logPanel;
     private final JLabel locationLabel;
     private JButton loadImageButton, clearPointsButton, recognizeBarcodeButton;
     private final JFileChooser fileChooser;
+    private JTextArea actionLog;
     private Mat image;
 
     private LocateCodePanel() {
         // Создание панели кнопок
         buttonPanel = createButtonPanel();
+
+        // Создание панели логов
+        logPanel = createLogPanel();
+
+        // Заполнение родительской панели
+        setLayout(new BorderLayout());
+        add(buttonPanel, BorderLayout.NORTH);
+        add(logPanel, BorderLayout.CENTER);
 
         // Создание панели изображения
         imagePanel = createImagePanel();
@@ -40,11 +51,18 @@ public class LocateCodePanel extends JPanel {
     }
 
     public static LocateCodePanel getInstance() {
-        return new LocateCodePanel();
+        if (instance == null) {
+            instance = new LocateCodePanel();
+        }
+        return instance;
     }
 
-    public JPanel getLocateCodePanel() {
-        return buttonPanel;
+    public static JPanel getLogPanel() {
+        return getInstance().logPanel;
+    }
+
+    public static JTextArea getActionLog() {
+        return getInstance().actionLog;
     }
 
     private JPanel createButtonPanel() {
@@ -69,6 +87,26 @@ public class LocateCodePanel extends JPanel {
         return panel;
     }
 
+    private JPanel createLogPanel() {
+        // Создание панели для логов
+        JPanel panel = new JPanel(new BorderLayout());
+        panel.setOpaque(false);
+
+        // Создание текстовой области для логов
+        actionLog = createActionLog();
+        panel.add(new JScrollPane(actionLog), BorderLayout.CENTER);
+
+        return panel;
+    }
+
+    private JTextArea createActionLog() {
+        JTextArea textArea = new JTextArea(5, 20);
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        return textArea;
+    }
+
     private JPanel createImagePanel() {
         return new JPanel(new BorderLayout());
     }
@@ -87,13 +125,13 @@ public class LocateCodePanel extends JPanel {
             public void mousePressed(MouseEvent e) {
                 if (points.size() < 4 && image != null) {
                     points.add(new Point(e.getX(), e.getY()));
-                    System.out.println("Point {x = " + e.getX() + ", y = " + e.getY() + "}");
+                    logAction("Point {x = " + e.getX() + ", y = " + e.getY() + "}");
                     if (points.size() == 4) {
                         recognizeBarcodeButton.setEnabled(true);
                     }
                     locationLabel.repaint();
                 } else {
-                    System.out.println("Штрих-код уже выделен");
+                    logAction("Штрих-код уже выделен");
                 }
 
                 // Включаем кнопку очистки точек
@@ -114,6 +152,7 @@ public class LocateCodePanel extends JPanel {
             try {
                 // Загрузка изображения
                 image = ImageIO.loadImage(imagePath);
+                logAction("\nЗагружено изображение: " + fileChooser.getSelectedFile().getName());
 
                 // Очистка точек после загрузки
                 clearPoints();
@@ -160,9 +199,9 @@ public class LocateCodePanel extends JPanel {
             clearPointsButton.setEnabled(false);
             recognizeBarcodeButton.setEnabled(false);
             locationLabel.repaint();
-            System.out.println("Точки очищены");
+            logAction("Точки очищены");
         } else {
-            System.out.println("Точек нет");
+            logAction("Точек нет");
         }
     }
 
@@ -225,5 +264,10 @@ public class LocateCodePanel extends JPanel {
         // Установка изображения на JLabel
         ImageIcon imageIcon = new ImageIcon(image);
         label.setIcon(imageIcon);
+    }
+
+    private void logAction(String action) {
+        actionLog.append(action + "\n");
+        actionLog.setCaretPosition(actionLog.getDocument().getLength());
     }
 }

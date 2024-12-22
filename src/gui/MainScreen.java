@@ -28,7 +28,7 @@ public class MainScreen extends JFrame {
 
         // Создание панели вкладок
         JTabbedPane tabbedPane = new JTabbedPane(JTabbedPane.BOTTOM);
-        tabbedPane.addTab("Выделить код на изображении", locateCodePanel.getLocateCodePanel());
+        tabbedPane.addTab("Выделить код на изображении", locateCodePanel);
 
         frame.add(tabbedPane, BorderLayout.CENTER);
         frame.setVisible(true);
