@@ -1,17 +1,17 @@
 package gui;
 
-import exception.ImageReadException;
-import org.opencv.core.Mat;
 import util.BarcodeProcessing;
 import util.DataConversions;
-import util.ImageIO;
 
+
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 
 import static util.ImagePoints.*;
 
@@ -25,7 +25,7 @@ public class LocateCodePanel extends JPanel {
     private JButton loadImageButton, clearPointsButton, recognizeBarcodeButton;
     private final JFileChooser fileChooser;
     private JTextArea actionLog;
-    private Mat image;
+    private BufferedImage image;
 
     private LocateCodePanel() {
         // Создание панели кнопок
@@ -57,9 +57,6 @@ public class LocateCodePanel extends JPanel {
         return instance;
     }
 
-    public static JPanel getLogPanel() {
-        return getInstance().logPanel;
-    }
 
     public static JTextArea getActionLog() {
         return getInstance().actionLog;
@@ -148,39 +145,44 @@ public class LocateCodePanel extends JPanel {
     private void loadImage() {
         if (fileChooser.showOpenDialog(buttonPanel) == JFileChooser.APPROVE_OPTION) {
             String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
+
+            // Загрузка изображения
             try {
-                // Загрузка изображения
-                image = ImageIO.loadImage(imagePath);
+                image = ImageIO.read(new File(imagePath));
                 logAction("\nЗагружено изображение: " + fileChooser.getSelectedFile().getName());
 
-                // Очистка точек после загрузки
-                clearPoints();
+            // Очистка точек после загрузки
+            clearPoints();
 
-                // Отключение кнопки загрузки
-                loadImageButton.setEnabled(false);
+            // Отключение кнопки загрузки
+            loadImageButton.setEnabled(false);
 
-                // Отображение изображения
-                displayImage(image, locationLabel);
+            // Отображение изображения
+            displayImage(DataConversions.binaryBitmapToBufferedImage
+                    (
+                            BarcodeProcessing.createBitmap(image)
+                    ), locationLabel);
 
-                // Создание фрейма для изображения
-                JFrame imageFrame = createImageFrame("Loaded Image");
+            // Создание фрейма для изображения
+            JFrame imageFrame = createImageFrame("Loaded Image");
 
-                imageFrame.addWindowListener(new WindowAdapter() {
-                    @Override
-                    public void windowClosed(WindowEvent e) {
-                        super.windowClosed(e);
-                        clearPoints();
-                        loadImageButton.setEnabled(true);
-                        clearPointsButton.setEnabled(false);
-                        recognizeBarcodeButton.setEnabled(false);
-                    }
-                });
-                imageFrame.add(imagePanel);
-                imageFrame.pack();
-                imageFrame.setVisible(true);
-                imageFrame.setLocationRelativeTo(null);
-            } catch (ImageReadException ire) {
-                showErrorDialog(ire.getMessage());
+            imageFrame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowClosed(WindowEvent e) {
+                    super.windowClosed(e);
+                    clearPoints();
+                    loadImageButton.setEnabled(true);
+                    clearPointsButton.setEnabled(false);
+                    recognizeBarcodeButton.setEnabled(false);
+                }
+            });
+            imageFrame.add(imagePanel);
+            imageFrame.pack();
+            imageFrame.setVisible(true);
+            imageFrame.setLocationRelativeTo(null);
+
+            } catch (IOException e) {
+                logAction("\nОшибка загрузки изображения: " + fileChooser.getSelectedFile().getName());
             }
         }
     }
@@ -206,13 +208,23 @@ public class LocateCodePanel extends JPanel {
     }
 
     private void recognizeBarcode() {
+
         recognizeBarcodeButton.setEnabled(false);
 
-        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(
-                DataConversions.matToBufferedImage(image),
-                minX, minY,
-                width, height
-        );
+//        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(
+//                image,
+//                minX, minY,
+//                width, height
+//        );
+
+        BufferedImage barcodeBitmap = DataConversions.
+                binaryBitmapToBufferedImage(
+                        BarcodeProcessing.createBitmap(
+                                image,
+                                minX, minY,
+                                width, height
+                        ));
+        BarcodeProcessing.processBarcode(image);
 
         JLabel bitmapLabel = new JLabel();
         displayImage(barcodeBitmap, bitmapLabel);
@@ -246,19 +258,6 @@ public class LocateCodePanel extends JPanel {
                 "Изображения (JPG, PNG, BMP)", "jpg", "jpeg", "png", "bmp")
         );
         return fileChooser;
-    }
-
-    private void showErrorDialog(String message) {
-        JOptionPane.showMessageDialog(buttonPanel, message, "Ошибка", JOptionPane.ERROR_MESSAGE);
-    }
-
-    private void displayImage(Mat image, JLabel label) {
-        // Получение оригинальных размеров изображения
-        BufferedImage bufferedImage = DataConversions.matToBufferedImage(image);
-
-        // Установка изображения на JLabel
-        ImageIcon imageIcon = new ImageIcon(bufferedImage);
-        label.setIcon(imageIcon);
     }
 
     private void displayImage(BufferedImage image, JLabel label) {

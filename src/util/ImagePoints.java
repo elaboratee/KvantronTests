@@ -36,11 +36,7 @@ public class ImagePoints {
             if (point.getX() < minX) minX = (int) point.getX();
             if (point.getY() < minY) minY = (int) point.getY();
         }
-        LocateCodePanel.getActionLog().append(
-                "minX: " + minX + "\nminY:" + minY + "\nmaxX: " + maxX + "\nmaxY:" + maxY
-        );
         width = maxX - minX;
         height = maxY - minY;
-        LocateCodePanel.getActionLog().append("\nwidth: " + width + "\nheight: " + height + "\n");
     }
 }
