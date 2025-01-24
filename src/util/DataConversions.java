@@ -1,6 +1,7 @@
 package util;
 
 import com.google.zxing.BinaryBitmap;
+import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 
 import java.awt.*;
@@ -45,6 +46,28 @@ public class DataConversions {
         } catch (Exception e) {
             System.err.println("Ошибка преобразования BinaryBitmap: " + e.getMessage());
             return null;
+        }
+    }
+
+    public static Mat binaryBitmapToMat(BinaryBitmap bitmap) {
+        try {
+            int width = bitmap.getWidth();
+            int height = bitmap.getHeight();
+
+            // Создаем матрицу с одним каналом (Grayscale)
+            Mat mat = new Mat(height, width, CvType.CV_8UC1);
+
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    // Если пиксель черный, задаём значение 0, иначе 255
+                    int value = bitmap.getBlackMatrix().get(x, y) ? 0 : 255;
+                    mat.put(y, x, value);
+                }
+            }
+            return mat;
+        } catch (Exception e) {
+            System.err.println("Ошибка преобразования BinaryBitmap в Mat: " + e.getMessage());
+            return Mat.zeros(1, 1, CvType.CV_8UC1); // Возвращаем пустую матрицу в случае ошибки
         }
     }
 }

@@ -4,6 +4,7 @@ import com.google.zxing.*;
 import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
 import com.google.zxing.common.HybridBinarizer;
 import gui.LocateCodePanel;
+import org.opencv.core.Mat;
 
 import java.awt.image.BufferedImage;
 
@@ -25,5 +26,14 @@ public class BarcodeProcessing {
         }
 
         return DataConversions.binaryBitmapToBufferedImage(bitmap);
+    }
+
+
+    public static Mat bitmapConversion(BufferedImage image) {
+
+        LuminanceSource source = new BufferedImageLuminanceSource(image);
+        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+
+        return DataConversions.binaryBitmapToMat(bitmap);
     }
 }

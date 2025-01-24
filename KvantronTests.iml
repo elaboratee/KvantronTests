@@ -7,9 +7,20 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" exported="" name="formdev.flatlaf.intellij.themes" level="application" />
     <orderEntry type="module" module-name="core" />
     <orderEntry type="module" module-name="javase" />
     <orderEntry type="library" name="opencv-490" level="application" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/../opencv/build/java/opencv-490.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../opencv/build/java/opencv-490.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="formdev.flatlaf.intellij.themes" level="application" />
   </component>
 </module>
