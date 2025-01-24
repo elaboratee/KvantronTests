@@ -2,6 +2,7 @@ package gui;
 
 import exception.ImageReadException;
 import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
 import util.BarcodeProcessing;
 import util.DataConversions;
 import util.ImageIO;

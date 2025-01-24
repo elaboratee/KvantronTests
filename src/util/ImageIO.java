@@ -9,7 +9,7 @@ import org.opencv.imgproc.Imgproc;
 public class ImageIO {
 
     public static Mat loadImage(String path) throws ImageReadException {
-        Mat image = Imgcodecs.imread(path);
+        Mat image = Imgcodecs.imread(path, Imgcodecs.IMREAD_GRAYSCALE);
         if (image.empty()) {
             throw new ImageReadException("Загружено пустое изображение!");
         }
