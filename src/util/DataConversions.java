@@ -7,6 +7,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 
 public class DataConversions {
+
     public static BufferedImage matToBufferedImage(Mat mat) {
         int type;
         if (mat.channels() == 1) {

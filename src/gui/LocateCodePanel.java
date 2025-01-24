@@ -2,7 +2,8 @@ package gui;
 
 import exception.ImageReadException;
 import org.opencv.core.Mat;
-import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.core.Size;
+import org.opencv.imgproc.Imgproc;
 import util.BarcodeProcessing;
 import util.DataConversions;
 import util.ImageIO;
@@ -56,10 +57,6 @@ public class LocateCodePanel extends JPanel {
             instance = new LocateCodePanel();
         }
         return instance;
-    }
-
-    public static JPanel getLogPanel() {
-        return getInstance().logPanel;
     }
 
     public static JTextArea getActionLog() {
@@ -254,11 +251,46 @@ public class LocateCodePanel extends JPanel {
     }
 
     private void displayImage(Mat image, JLabel label) {
-        // Получение оригинальных размеров изображения
+        // Преобразование изображения
         BufferedImage bufferedImage = DataConversions.matToBufferedImage(image);
 
+        // Проверка необходимости масштабирования изображения
+        ImageIcon imageIcon;
+        Toolkit tk = Toolkit.getDefaultToolkit();
+        if (bufferedImage.getWidth() > tk.getScreenSize().width &&
+                bufferedImage.getHeight() > tk.getScreenSize().height) {
+
+            // Получение исходных размеров изображений
+            int originalWidth = bufferedImage.getWidth();
+            int originalHeight = bufferedImage.getHeight();
+
+            // Получение доступного размера панели
+            int maxWidth = (int) (tk.getScreenSize().width / 1.2);
+            int maxHeight = (int) (tk.getScreenSize().height / 1.2);
+
+            // Расчет новых размеров с сохранением пропорций
+            double widthRatio = (double) maxWidth / originalWidth;
+            double heightRatio = (double) maxHeight / originalHeight;
+            double scale = Math.min(widthRatio, heightRatio);
+
+            int newWidth = (int) (originalWidth * scale);
+            int newHeight = (int) (originalHeight * scale);
+
+            // Масштабирование изображения с сохранением пропорций
+            Image scaledImage = bufferedImage.getScaledInstance(newWidth, newHeight, Image.SCALE_REPLICATE);
+            imageIcon = new ImageIcon(scaledImage);
+
+            // Масштабирование матрицы исходного изображения с подбором метода по значению scale
+            if (scale < 1) {
+                Imgproc.resize(image, image, new Size(newWidth, newHeight), 0, 0, Imgproc.INTER_LANCZOS4);
+            } else {
+                Imgproc.resize(image, image, new Size(newWidth, newHeight), 0, 0, Imgproc.INTER_CUBIC);
+            }
+        } else {
+            imageIcon = new ImageIcon(bufferedImage);
+        }
+
         // Установка изображения на JLabel
-        ImageIcon imageIcon = new ImageIcon(bufferedImage);
         label.setIcon(imageIcon);
     }
 
