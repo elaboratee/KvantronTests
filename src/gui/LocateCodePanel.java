@@ -87,8 +87,6 @@ public class LocateCodePanel extends JPanel {
         return panel;
     }
 
-
-
     private JPanel createLogPanel() {
         // Создание панели для логов
         JPanel panel = new JPanel(new BorderLayout());
@@ -191,15 +189,16 @@ public class LocateCodePanel extends JPanel {
         }
     }
 
-
     private void thresholdImage() {
         // Отключение кнопки пороговой обработки
         thresholdImageButton.setEnabled(false);
 
-        binaryImage = BarcodeProcessing.bitmapConversion(DataConversions.matToBufferedImage(image));
+        // Получение бинарного изображения
+        binaryImage = BarcodeProcessing.getImageBitmap(DataConversions.matToBufferedImage(image));
 
         // Отображение изображения
         displayImage(binaryImage, locationLabel);
+        logAction("Изображение бинаризовано");
     }
 
     private JFrame createImageFrame(String title) {
@@ -222,11 +221,16 @@ public class LocateCodePanel extends JPanel {
         }
     }
 
-
     private void recognizeBarcode() {
         recognizeBarcodeButton.setEnabled(false);
 
-        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(
+//        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(
+//                DataConversions.matToBufferedImage(image),
+//                minX, minY,
+//                width, height
+//        );
+
+        Mat barcodeBitmap = BarcodeProcessing.processBarcode(
                 DataConversions.matToBufferedImage(image),
                 minX, minY,
                 width, height
@@ -311,12 +315,6 @@ public class LocateCodePanel extends JPanel {
         }
 
         // Установка изображения на JLabel
-        label.setIcon(imageIcon);
-    }
-
-    private void displayImage(BufferedImage image, JLabel label) {
-        // Установка изображения на JLabel
-        ImageIcon imageIcon = new ImageIcon(image);
         label.setIcon(imageIcon);
     }
 

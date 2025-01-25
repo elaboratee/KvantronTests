@@ -11,7 +11,7 @@ import java.awt.image.BufferedImage;
 
 public class BarcodeProcessing {
 
-    public static BufferedImage processBarcode(BufferedImage image,
+    public static Mat processBarcode(BufferedImage image,
                                                int minX, int minY,
                                                int width, int height) {
 
@@ -24,15 +24,6 @@ public class BarcodeProcessing {
         } catch (NotFoundException e) {
             LocateCodePanel.getActionLog().append("Штрих-код не найден\n");
         }
-
-        return DataConversions.binaryBitmapToBufferedImage(bitmap);
-    }
-
-
-    public static Mat bitmapConversion(BufferedImage image) {
-
-        LuminanceSource source = new BufferedImageLuminanceSource(image);
-        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
 
         return DataConversions.binaryBitmapToMat(bitmap);
     }
