@@ -4,6 +4,7 @@ import exception.ImageReadException;
 import org.opencv.core.Point;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
+import util.BarcodeLocalization;
 import util.BarcodeProcessing;
 import util.DataConversions;
 import util.ImageIO;
@@ -24,7 +25,7 @@ public class LocateCodePanel extends JPanel {
     private final JPanel buttonPanel, imagePanel;
     private final JLabel locationLabel;
     private JButton loadImageButton, clearPointsButton, recognizeBarcodeButton;
-    private JButton binarizeImageButton, localizeBarcodesButton;
+    private JButton binarizeImageButton, localizeBarcodesButton, morphImageButton;
     private final JFileChooser fileChooser;
     private JTextArea actionLog;
     private Mat image, binaryImage;
@@ -73,12 +74,15 @@ public class LocateCodePanel extends JPanel {
         clearPointsButton = createButton("Очистить точки", e -> clearPoints());
         binarizeImageButton = createButton("Бинаризация", e -> binarizeImage());
         recognizeBarcodeButton = createButton("Распознать", e -> recognizeBarcode());
+        morphImageButton = createButton("Морфологическая обработка", e -> morphImage());
         localizeBarcodesButton = createButton("Выполнить локализацию", e -> localizeBarcodes());
+
 
         // Выключение кнопок
         clearPointsButton.setEnabled(false);
         recognizeBarcodeButton.setEnabled(false);
         binarizeImageButton.setEnabled(false);
+        morphImageButton.setEnabled(false);
         localizeBarcodesButton.setEnabled(false);
 
         // Добавление кнопок на панель
@@ -86,6 +90,7 @@ public class LocateCodePanel extends JPanel {
         panel.add(clearPointsButton);
         panel.add(binarizeImageButton);
         panel.add(recognizeBarcodeButton);
+        panel.add(morphImageButton);
         panel.add(localizeBarcodesButton);
 
         return panel;
@@ -189,6 +194,8 @@ public class LocateCodePanel extends JPanel {
                         clearPointsButton.setEnabled(false);
                         recognizeBarcodeButton.setEnabled(false);
                         binarizeImageButton.setEnabled(false);
+                        morphImageButton.setEnabled(false);
+                        localizeBarcodesButton.setEnabled(false);
                     }
                 });
                 imageFrame.add(imagePanel);
@@ -217,14 +224,17 @@ public class LocateCodePanel extends JPanel {
         // Отключение кнопки бинаризации
         binarizeImageButton.setEnabled(false);
 
-        // Получение бинарного изображения
-        binaryImage = BarcodeProcessing.getImageBitmap(DataConversions.matToBufferedImage(image));
+        // Пороговая обработка
+        binaryImage = new Mat();
+        Imgproc.cvtColor(image, binaryImage, Imgproc.COLOR_BGR2GRAY);
+        Imgproc.threshold(binaryImage, binaryImage, 100, 255, Imgproc.THRESH_BINARY);
 
         // Отображение изображения
         displayImage(binaryImage, locationLabel);
         logAction("Изображение бинаризовано");
 
         // Включение кнопки локализации
+        morphImageButton.setEnabled(true);
         localizeBarcodesButton.setEnabled(true);
     }
 
@@ -232,7 +242,7 @@ public class LocateCodePanel extends JPanel {
         recognizeBarcodeButton.setEnabled(false);
 
         Mat barcodeBitmap = BarcodeProcessing.processBarcode(
-                DataConversions.matToBufferedImage(image),
+                DataConversions.matToBufferedImage(binaryImage),
                 minX, minY,
                 width, height
         );
@@ -261,37 +271,43 @@ public class LocateCodePanel extends JPanel {
         imageFrame.setLocationRelativeTo(null);
     }
 
+    private void morphImage() {
+        // Отключение кнопки морфологической обработки
+        morphImageButton.setEnabled(false);
+
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(13, 13));
+
+        Mat dilatedImage = new Mat();
+        Mat subtractImage = new Mat();
+
+        // Морфологическая обработка
+        Imgproc.dilate(binaryImage, dilatedImage, kernel);
+
+        // Вычитание изображений для удаления крупных шумовых элементов
+        Core.bitwise_not(dilatedImage, dilatedImage);
+        Core.bitwise_or(binaryImage, dilatedImage, subtractImage);
+
+        // Сохранение обработанного изображения
+        binaryImage = subtractImage;
+
+        // Отображение обработанного изображения
+        displayImage(subtractImage, locationLabel);
+
+        logAction("Произведена морфологическая обработка");
+    }
+
     private void localizeBarcodes() {
         // Отключение кнопки локализации
         localizeBarcodesButton.setEnabled(false);
 
-        // Подготовка констант
-        final int roiSize = 20;
-        final int roiArea = roiSize * roiSize;
-
-        // Выполнение локализации
-        for (int y = 0; y < binaryImage.rows() - roiSize; y += roiSize) {
-            for (int x = 0; x < binaryImage.cols() - roiSize; x += roiSize) {
-                Rect roi = new Rect(x, y, roiSize, roiSize);
-                Mat subMat = binaryImage.submat(roi);
-
-                int blackPixelCount = roiArea - Core.countNonZero(subMat);
-                if (blackPixelCount > roiArea / 3.5) {
-                    Imgproc.rectangle(
-                            binaryImage,
-                            new Point(x, y),
-                            new Point(x + roiSize, y + roiSize),
-                            new Scalar(0, 255, 0),
-                            2
-                    );
-                }
-            }
-        }
+        // Локализация областей кодов
+        binaryImage = BarcodeLocalization.localizeBarcodes(binaryImage);
 
         // Отображение изображения с областями локализации
         displayImage(binaryImage, locationLabel);
-
         logAction("Выполнена локализация кодов");
+
+        morphImageButton.setEnabled(false);
     }
 
     private JFileChooser createImageFileChooser() {
