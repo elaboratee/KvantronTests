@@ -27,4 +27,10 @@ public class BarcodeProcessing {
 
         return DataConversions.binaryBitmapToMat(bitmap);
     }
+
+    public static Mat getImageBitmap(BufferedImage image) {
+        LuminanceSource source = new BufferedImageLuminanceSource(image);
+        BinaryBitmap bitmap = new BinaryBitmap(new HybridBinarizer(source));
+        return DataConversions.binaryBitmapToMat(bitmap);
+    }
 }

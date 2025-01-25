@@ -71,18 +71,19 @@ public class LocateCodePanel extends JPanel {
         // Создание кнопок и привязка обработчиков событий
         loadImageButton = createButton("Загрузить изображение", e -> loadImage());
         clearPointsButton = createButton("Очистить точки", e -> clearPoints());
-        recognizeBarcodeButton = createButton("Распознать", e -> recognizeBarcode());
         thresholdImageButton = createButton("Пороговая обработка", e -> thresholdImage());
+        recognizeBarcodeButton = createButton("Распознать", e -> recognizeBarcode());
 
         // Выключение кнопок
         clearPointsButton.setEnabled(false);
         recognizeBarcodeButton.setEnabled(false);
         thresholdImageButton.setEnabled(false);
+
         // Добавление кнопок на панель
         panel.add(loadImageButton);
         panel.add(clearPointsButton);
-        panel.add(recognizeBarcodeButton);
         panel.add(thresholdImageButton);
+        panel.add(recognizeBarcodeButton);
 
         return panel;
     }
@@ -145,6 +146,14 @@ public class LocateCodePanel extends JPanel {
         return locationLabel;
     }
 
+    private JFrame createImageFrame(String title) {
+        // Создание окна для отображения изображения
+        JFrame imageFrame = new JFrame(title);
+        imageFrame.setResizable(false);
+        imageFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        return imageFrame;
+    }
+
     private void loadImage() {
         if (fileChooser.showOpenDialog(buttonPanel) == JFileChooser.APPROVE_OPTION) {
             String imagePath = fileChooser.getSelectedFile().getAbsolutePath();
@@ -189,26 +198,6 @@ public class LocateCodePanel extends JPanel {
         }
     }
 
-    private void thresholdImage() {
-        // Отключение кнопки пороговой обработки
-        thresholdImageButton.setEnabled(false);
-
-        // Получение бинарного изображения
-        binaryImage = BarcodeProcessing.getImageBitmap(DataConversions.matToBufferedImage(image));
-
-        // Отображение изображения
-        displayImage(binaryImage, locationLabel);
-        logAction("Изображение бинаризовано");
-    }
-
-    private JFrame createImageFrame(String title) {
-        // Создание окна для отображения изображения
-        JFrame imageFrame = new JFrame(title);
-        imageFrame.setResizable(false);
-        imageFrame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        return imageFrame;
-    }
-
     private void clearPoints() {
         if (!points.isEmpty()) {
             points.clear();
@@ -221,14 +210,20 @@ public class LocateCodePanel extends JPanel {
         }
     }
 
+    private void thresholdImage() {
+        // Отключение кнопки пороговой обработки
+        thresholdImageButton.setEnabled(false);
+
+        // Получение бинарного изображения
+        binaryImage = BarcodeProcessing.getImageBitmap(DataConversions.matToBufferedImage(image));
+
+        // Отображение изображения
+        displayImage(binaryImage, locationLabel);
+        logAction("Изображение бинаризовано");
+    }
+
     private void recognizeBarcode() {
         recognizeBarcodeButton.setEnabled(false);
-
-//        BufferedImage barcodeBitmap = BarcodeProcessing.processBarcode(
-//                DataConversions.matToBufferedImage(image),
-//                minX, minY,
-//                width, height
-//        );
 
         Mat barcodeBitmap = BarcodeProcessing.processBarcode(
                 DataConversions.matToBufferedImage(image),
@@ -239,8 +234,8 @@ public class LocateCodePanel extends JPanel {
         JLabel bitmapLabel = new JLabel();
         displayImage(barcodeBitmap, bitmapLabel);
 
-        JPanel imagePanel = createImagePanel();
-        imagePanel.add(bitmapLabel, BorderLayout.CENTER);
+        JPanel bitmapPanel = createImagePanel();
+        bitmapPanel.add(bitmapLabel, BorderLayout.CENTER);
 
         JFrame imageFrame = createImageFrame("Barcode Bitmap");
 
@@ -253,11 +248,11 @@ public class LocateCodePanel extends JPanel {
                 }
             }
         });
-        imageFrame.add(imagePanel);
 
+        imageFrame.add(bitmapPanel);
         imageFrame.pack();
-        imageFrame.setVisible(true);
         imageFrame.setLocationRelativeTo(null);
+        imageFrame.setVisible(true);
     }
 
     private JFileChooser createImageFileChooser() {
