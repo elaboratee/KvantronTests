@@ -1,8 +1,8 @@
 package gui;
 
 import exception.ImageReadException;
-import org.opencv.core.Mat;
-import org.opencv.core.Size;
+import org.opencv.core.Point;
+import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 import util.BarcodeProcessing;
 import util.DataConversions;
@@ -17,14 +17,14 @@ import java.io.File;
 
 import static util.ImagePoints.*;
 
-
 public class LocateCodePanel extends JPanel {
 
     private static LocateCodePanel instance;
 
     private final JPanel buttonPanel, imagePanel, logPanel;
     private final JLabel locationLabel;
-    private JButton loadImageButton, clearPointsButton, recognizeBarcodeButton, thresholdImageButton;
+    private JButton loadImageButton, clearPointsButton, recognizeBarcodeButton;
+    private JButton thresholdImageButton, localizeBarcodesButton;
     private final JFileChooser fileChooser;
     private JTextArea actionLog;
     private Mat image, binaryImage;
@@ -65,7 +65,7 @@ public class LocateCodePanel extends JPanel {
 
     private JPanel createButtonPanel() {
         // Создание панели кнопок
-        JPanel panel = new JPanel(new GridLayout(2, 2, 0, 0));
+        JPanel panel = new JPanel(new GridLayout(3, 2, 0, 0));
         panel.setOpaque(false);
 
         // Создание кнопок и привязка обработчиков событий
@@ -73,17 +73,20 @@ public class LocateCodePanel extends JPanel {
         clearPointsButton = createButton("Очистить точки", e -> clearPoints());
         thresholdImageButton = createButton("Пороговая обработка", e -> thresholdImage());
         recognizeBarcodeButton = createButton("Распознать", e -> recognizeBarcode());
+        localizeBarcodesButton = createButton("Выполнить локализацию", e -> localizeBarcodes());
 
         // Выключение кнопок
         clearPointsButton.setEnabled(false);
         recognizeBarcodeButton.setEnabled(false);
         thresholdImageButton.setEnabled(false);
+        localizeBarcodesButton.setEnabled(false);
 
         // Добавление кнопок на панель
         panel.add(loadImageButton);
         panel.add(clearPointsButton);
         panel.add(thresholdImageButton);
         panel.add(recognizeBarcodeButton);
+        panel.add(localizeBarcodesButton);
 
         return panel;
     }
@@ -220,6 +223,9 @@ public class LocateCodePanel extends JPanel {
         // Отображение изображения
         displayImage(binaryImage, locationLabel);
         logAction("Изображение бинаризовано");
+
+        // Включение кнопки локализации
+        localizeBarcodesButton.setEnabled(true);
     }
 
     private void recognizeBarcode() {
@@ -251,8 +257,41 @@ public class LocateCodePanel extends JPanel {
 
         imageFrame.add(bitmapPanel);
         imageFrame.pack();
-        imageFrame.setLocationRelativeTo(null);
         imageFrame.setVisible(true);
+        imageFrame.setLocationRelativeTo(null);
+    }
+
+    private void localizeBarcodes() {
+        // Отключение кнопки локализации
+        localizeBarcodesButton.setEnabled(false);
+
+        // Подготовка констант
+        final int roiSize = 20;
+        final int roiArea = roiSize * roiSize;
+
+        // Выполнение локализации
+        for (int y = 0; y < binaryImage.rows() - roiSize; y += roiSize) {
+            for (int x = 0; x < binaryImage.cols() - roiSize; x += roiSize) {
+                Rect roi = new Rect(x, y, roiSize, roiSize);
+                Mat subMat = binaryImage.submat(roi);
+
+                int blackPixelCount = roiArea - Core.countNonZero(subMat);
+                if (blackPixelCount > roiArea / 3.5) {
+                    Imgproc.rectangle(
+                            binaryImage,
+                            new Point(x, y),
+                            new Point(x + roiSize, y + roiSize),
+                            new Scalar(0, 255, 0),
+                            2
+                    );
+                }
+            }
+        }
+
+        // Отображение изображения с областями локализации
+        displayImage(binaryImage, locationLabel);
+
+        logAction("Выполнена локализация кодов");
     }
 
     private JFileChooser createImageFileChooser() {

@@ -1,6 +1,7 @@
 package util;
 
-import java.awt.*;
+import org.opencv.core.Point;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -29,10 +30,10 @@ public class ImagePoints {
         maxX = maxY = Integer.MIN_VALUE;
         minX = minY = Integer.MAX_VALUE;
         for (Point point : points) {
-            if (point.getX() > maxX) maxX = (int) point.getX();
-            if (point.getY() > maxY) maxY = (int) point.getY();
-            if (point.getX() < minX) minX = (int) point.getX();
-            if (point.getY() < minY) minY = (int) point.getY();
+            if (point.x > maxX) maxX = (int) point.x;
+            if (point.y > maxY) maxY = (int) point.y;
+            if (point.x < minX) minX = (int) point.x;
+            if (point.y < minY) minY = (int) point.y;
         }
         width = maxX - minX;
         height = maxY - minY;

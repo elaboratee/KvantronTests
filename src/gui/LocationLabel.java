@@ -1,5 +1,6 @@
 package gui;
 
+import org.opencv.core.Point;
 import util.ImagePoints;
 
 import javax.swing.*;
@@ -20,7 +21,7 @@ public class LocationLabel extends JLabel {
 
         // Отрисовка точек
         for (Point point : points) {
-            g2.fillOval(point.x - 3, point.y - 3, 6, 6); // Рисуем точку
+            g2.fillOval((int) point.x - 3, (int) point.y - 3, 6, 6); // Рисуем точку
         }
 
         if (points.size() == 4) {
@@ -31,10 +32,10 @@ public class LocationLabel extends JLabel {
             ImagePoints.findBarcodeBorders();
 
             // Отрисовка линий
-            g2.drawLine(points.get(0).x, points.get(0).y, points.get(1).x, points.get(1).y);
-            g2.drawLine(points.get(1).x, points.get(1).y, points.get(2).x, points.get(2).y);
-            g2.drawLine(points.get(2).x, points.get(2).y, points.get(3).x, points.get(3).y);
-            g2.drawLine(points.get(3).x, points.get(3).y, points.get(0).x, points.get(0).y);
+            g2.drawLine((int) points.get(0).x, (int) points.get(0).y, (int) points.get(1).x, (int) points.get(1).y);
+            g2.drawLine((int) points.get(1).x, (int) points.get(1).y, (int) points.get(2).x, (int) points.get(2).y);
+            g2.drawLine((int) points.get(2).x, (int) points.get(2).y, (int) points.get(3).x, (int) points.get(3).y);
+            g2.drawLine((int) points.get(3).x, (int) points.get(3).y, (int) points.get(0).x, (int) points.get(0).y);
         }
     }
 }
