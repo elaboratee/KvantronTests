@@ -21,7 +21,7 @@ public class LocateCodePanel extends JPanel {
 
     private static LocateCodePanel instance;
 
-    private final JPanel buttonPanel, imagePanel, logPanel;
+    private final JPanel buttonPanel, imagePanel;
     private final JLabel locationLabel;
     private JButton loadImageButton, clearPointsButton, recognizeBarcodeButton;
     private JButton binarizeImageButton, localizeBarcodesButton;
@@ -34,7 +34,7 @@ public class LocateCodePanel extends JPanel {
         buttonPanel = createButtonPanel();
 
         // Создание панели логов
-        logPanel = createLogPanel();
+        JPanel logPanel = createLogPanel();
 
         // Заполнение родительской панели
         setLayout(new BorderLayout());
