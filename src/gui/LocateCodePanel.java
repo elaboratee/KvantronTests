@@ -24,7 +24,7 @@ public class LocateCodePanel extends JPanel {
     private final JPanel buttonPanel, imagePanel, logPanel;
     private final JLabel locationLabel;
     private JButton loadImageButton, clearPointsButton, recognizeBarcodeButton;
-    private JButton thresholdImageButton, localizeBarcodesButton;
+    private JButton binarizeImageButton, localizeBarcodesButton;
     private final JFileChooser fileChooser;
     private JTextArea actionLog;
     private Mat image, binaryImage;
@@ -71,20 +71,20 @@ public class LocateCodePanel extends JPanel {
         // Создание кнопок и привязка обработчиков событий
         loadImageButton = createButton("Загрузить изображение", e -> loadImage());
         clearPointsButton = createButton("Очистить точки", e -> clearPoints());
-        thresholdImageButton = createButton("Пороговая обработка", e -> thresholdImage());
+        binarizeImageButton = createButton("Бинаризация", e -> binarizeImage());
         recognizeBarcodeButton = createButton("Распознать", e -> recognizeBarcode());
         localizeBarcodesButton = createButton("Выполнить локализацию", e -> localizeBarcodes());
 
         // Выключение кнопок
         clearPointsButton.setEnabled(false);
         recognizeBarcodeButton.setEnabled(false);
-        thresholdImageButton.setEnabled(false);
+        binarizeImageButton.setEnabled(false);
         localizeBarcodesButton.setEnabled(false);
 
         // Добавление кнопок на панель
         panel.add(loadImageButton);
         panel.add(clearPointsButton);
-        panel.add(thresholdImageButton);
+        panel.add(binarizeImageButton);
         panel.add(recognizeBarcodeButton);
         panel.add(localizeBarcodesButton);
 
@@ -171,8 +171,8 @@ public class LocateCodePanel extends JPanel {
                 // Отключение кнопки загрузки
                 loadImageButton.setEnabled(false);
 
-                // Включение кнопки пороговой обработки
-                thresholdImageButton.setEnabled(true);
+                // Включение кнопки бинаризации
+                binarizeImageButton.setEnabled(true);
 
                 // Отображение изображения
                 displayImage(image, locationLabel);
@@ -188,7 +188,7 @@ public class LocateCodePanel extends JPanel {
                         loadImageButton.setEnabled(true);
                         clearPointsButton.setEnabled(false);
                         recognizeBarcodeButton.setEnabled(false);
-                        thresholdImageButton.setEnabled(false);
+                        binarizeImageButton.setEnabled(false);
                     }
                 });
                 imageFrame.add(imagePanel);
@@ -213,9 +213,9 @@ public class LocateCodePanel extends JPanel {
         }
     }
 
-    private void thresholdImage() {
-        // Отключение кнопки пороговой обработки
-        thresholdImageButton.setEnabled(false);
+    private void binarizeImage() {
+        // Отключение кнопки бинаризации
+        binarizeImageButton.setEnabled(false);
 
         // Получение бинарного изображения
         binaryImage = BarcodeProcessing.getImageBitmap(DataConversions.matToBufferedImage(image));
