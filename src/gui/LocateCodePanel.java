@@ -4,10 +4,7 @@ import exception.ImageReadException;
 import org.opencv.core.Point;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
-import util.BarcodeLocalization;
-import util.BarcodeProcessing;
-import util.DataConversions;
-import util.ImageIO;
+import util.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -310,13 +307,7 @@ public class LocateCodePanel extends JPanel {
 
         BarcodeLocalization.localizeBarcodess(binaryImage, image);
 
-
-
-        // Отображение изображения с областями локализации
-        displayImage(image, locationLabel);
         logAction("Выполнена локализация кодов");
-
-//        displayImage(image, locationLabel);
 
         morphImageButton.setEnabled(false);
     }
