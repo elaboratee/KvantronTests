@@ -3,11 +3,9 @@ package gui;
 import exception.ImageReadException;
 import org.opencv.core.Point;
 import org.opencv.core.*;
+import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
-import util.BarcodeLocalization;
-import util.BarcodeProcessing;
-import util.DataConversions;
-import util.ImageIO;
+import util.*;
 
 import javax.swing.*;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -15,6 +13,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.List;
 
 import static util.ImagePoints.*;
 
@@ -278,25 +277,16 @@ public class LocateCodePanel extends JPanel {
         // Отключение кнопки морфологической обработки
         morphImageButton.setEnabled(false);
 
-        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(13, 13));
-
-        Mat dilatedImage = new Mat();
-        Mat subtractImage = new Mat();
-
-        // Морфологическая обработка
-        Imgproc.dilate(binaryImage, dilatedImage, kernel);
-
-        // Вычитание изображений для удаления крупных шумовых элементов
-        Core.bitwise_not(dilatedImage, dilatedImage);
-        Core.bitwise_or(binaryImage, dilatedImage, subtractImage);
-
-
-
-        // Сохранение обработанного изображения
-        binaryImage = subtractImage;
+        // Удаление крупных шумовых областей
+        binaryImage = MorphOps.removeLargeBlackAreas(binaryImage);
 
         // Отображение обработанного изображения
-        displayImage(subtractImage, locationLabel);
+        displayImage(binaryImage, locationLabel);
+
+        // Выделение найденных компонент
+        Mat componentsImage = MorphOps.findConnectedComponents(binaryImage);
+        Imgcodecs.imwrite("media" + File.separator + "components" +
+                File.separator + "comp.png", componentsImage);
 
         logAction("Произведена морфологическая обработка");
     }
