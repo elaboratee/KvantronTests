@@ -77,7 +77,7 @@ public class MorphOps {
                         // Найденная компонента помечается как посещенная
                         Core.bitwise_or(visited, componentMask, visited);
 
-                        if (Core.countNonZero(componentMask) >= 3500) {
+                        if (Core.countNonZero(componentMask) >= 19000) {
                             Core.bitwise_or(result, componentMask, result);
                         }
                     }
