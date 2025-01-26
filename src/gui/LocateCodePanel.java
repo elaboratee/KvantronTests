@@ -275,8 +275,8 @@ public class LocateCodePanel extends JPanel {
         // Отключение кнопки морфологической обработки
         morphImageButton.setEnabled(false);
 
-        // Удаление крупных шумовых областей
-        binaryImage = MorphOps.removeLargeBlackAreas(binaryImage);
+//        // Удаление крупных шумовых областей
+//        binaryImage = MorphOps.removeLargeBlackAreas(binaryImage);
 
         // Поиск крупных связанных компонент
         Mat componentsImage = MorphOps.findConnectedComponents(binaryImage);
@@ -303,9 +303,7 @@ public class LocateCodePanel extends JPanel {
         Core.bitwise_xor(binaryImageCopy, binaryImage, binaryImage);
         Core.bitwise_not(binaryImage, binaryImage);
 
-        displayImage(binaryImage, locationLabel);
-
-        BarcodeLocalization.localizeBarcodess(binaryImage, image);
+        displayImage(image, locationLabel);
 
         logAction("Выполнена локализация кодов");
 

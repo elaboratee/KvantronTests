@@ -10,65 +10,32 @@ public class BarcodeLocalization {
 
     public static void localizeBarcodes(Mat binaryImage, Mat image) {
 
-        // Подготовка структур данных
-//        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
-//        Imgproc.erode(binaryImage, binaryImage, kernel);
-
         Rect roi;
         Mat subMat;
-        int roiSize = 60;
-        int roiArea = roiSize * roiSize;
-
-
+        int roiSize = 65;
+        List<Rect> barcodes = new ArrayList<>();
+        int count;
 
         // Локализация с динамическим подбором размера ядра
         for (int y = 0; y < binaryImage.rows() - roiSize; y += roiSize / 5) {
             for (int x = 0; x < binaryImage.cols() - roiSize; x += roiSize / 3) {
                 roi = new Rect(x, y, roiSize, roiSize);
                 subMat = binaryImage.submat(roi);
+                count = countTransitions(subMat);
 
-                int blackPixelCount = roiArea - Core.countNonZero(subMat);
-                if (countTransitions(subMat) >= 400 && countTransitions(subMat) < 700) {
-                    if ((blackPixelCount >= roiArea / 5.5) && (blackPixelCount <= roiArea)) {
-                        // Закрашиваем область белым
-                        subMat.setTo(new Scalar(255));
-                    }
+                if (count >= 270 && count < 400) {
+                    subMat.setTo(new Scalar(255));
+                    barcodes.add(roi);
                 }
             }
         }
+        printRectangle(barcodes, image);
+
     }
 
-    public static void localizeBarcodess(Mat binaryImage, Mat image) {
+    public static void printRectangle(List<Rect> rects, Mat image) {
 
-
-
-        Rect roi;
-        Mat subMat;
-        int roiSize = 60;
-        int roiArea = roiSize * roiSize;
-
-        List<Rect> detectedRegions = new ArrayList<>();
-
-        // Локализация с динамическим подбором размера ядра
-        for (int y = 0; y < binaryImage.rows() - roiSize; y += roiSize / 4) {
-            for (int x = 0; x < binaryImage.cols() - roiSize; x += roiSize / 3) {
-                roi = new Rect(x, y, roiSize, roiSize);
-                subMat = binaryImage.submat(roi);
-
-                int blackPixelCount = roiArea - Core.countNonZero(subMat);
-                if (countTransitions(subMat) >= 90 && countTransitions(subMat) < 2000) {
-                    if ((blackPixelCount >= roiArea / 2.5) && (blackPixelCount <= roiArea / 1.5)) {
-                        detectedRegions.add(roi);
-                    }
-                }
-            }
-        }
-        printRectangle(detectedRegions, image);
-    }
-
-    public static void printRectangle(List<Rect> rests, Mat image) {
-
-        for (Rect rect : rests) {
+        for (Rect rect : rects) {
             Imgproc.rectangle(
                     image,
                     rect.tl(),
