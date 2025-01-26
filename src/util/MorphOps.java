@@ -32,25 +32,30 @@ public class MorphOps {
     }
 
     public static Mat findConnectedComponents(Mat binaryImage) {
-        Mat result = Mat.zeros(binaryImage.size(), CvType.CV_8UC1);
+        // Матрица результата
+        Mat result = Mat.zeros(binaryImage.size(), CvType.CV_8U);
 
         // Проверка корректности изображения
         if (binaryImage.channels() == 1) {
-            // Инверсия бинарного изображения
-            Core.bitwise_not(binaryImage, binaryImage);
+            // Копирование исходной матрицы
+            Mat binaryCopy = new Mat(binaryImage.size(), CvType.CV_8U);
+            binaryImage.copyTo(binaryCopy);
 
-            Mat visited = Mat.zeros(binaryImage.size(), CvType.CV_8UC1);
+            // Инверсия бинарного изображения
+            Core.bitwise_not(binaryCopy, binaryCopy);
+
+            Mat visited = Mat.zeros(binaryCopy.size(), CvType.CV_8U);
             Mat structElem = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
 
-            for (int y = 0; y < binaryImage.rows(); y++) {
-                for (int x = 0; x < binaryImage.cols(); x++) {
+            for (int y = 0; y < binaryCopy.rows(); y++) {
+                for (int x = 0; x < binaryCopy.cols(); x++) {
                     // Если пиксель не посещен и является частью объекта
-                    if (binaryImage.get(y, x)[0] == 255 && visited.get(y, x)[0] == 0) {
+                    if (binaryCopy.get(y, x)[0] == 255 && visited.get(y, x)[0] == 0) {
                         // Создание начальной маски компоненты
-                        Mat componentMask = Mat.zeros(binaryImage.size(), CvType.CV_8UC1);
+                        Mat componentMask = Mat.zeros(binaryCopy.size(), CvType.CV_8U);
                         componentMask.put(y, x, 255); // Начальная точка
 
-                        Mat prevMask = Mat.zeros(binaryImage.size(), CvType.CV_8UC1);
+                        Mat prevMask = Mat.zeros(binaryCopy.size(), CvType.CV_8U);
 
                         // Итеративное морфологическое расширение
                         while (true) {
@@ -58,7 +63,7 @@ public class MorphOps {
                             Imgproc.dilate(componentMask, newMask, structElem);
 
                             // Ограничние по бинарному изображению
-                            Core.bitwise_and(newMask, binaryImage, newMask);
+                            Core.bitwise_and(newMask, binaryCopy, newMask);
 
                             // Если изменений больше нет, происходит завершение построения компоненты
                             if (Core.countNonZero(newMask) == Core.countNonZero(prevMask)) {
