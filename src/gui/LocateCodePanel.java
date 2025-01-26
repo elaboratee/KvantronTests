@@ -280,13 +280,14 @@ public class LocateCodePanel extends JPanel {
         // Удаление крупных шумовых областей
         binaryImage = MorphOps.removeLargeBlackAreas(binaryImage);
 
+        // Поиск крупных связанных компонент
+        Mat componentsImage = MorphOps.findConnectedComponents(binaryImage);
+
+        // Удаление компонент
+        Core.bitwise_or(binaryImage, componentsImage, binaryImage);
+
         // Отображение обработанного изображения
         displayImage(binaryImage, locationLabel);
-
-        // Выделение найденных компонент
-        Mat componentsImage = MorphOps.findConnectedComponents(binaryImage);
-        Imgcodecs.imwrite("media" + File.separator + "components" +
-                File.separator + "comp.png", componentsImage);
 
         logAction("Произведена морфологическая обработка");
     }
