@@ -12,29 +12,28 @@ public class BarcodeLocalization {
 
         Rect roi;
         Mat subMat;
-        int roiSize = 18;
         List<Rect> barcodes = new ArrayList<>();
-        int count;
+        int roiSize = 18, transitionCount;
 
-        // Локализация с динамическим подбором размера ядра
         for (int y = 0; y < binaryImage.rows() - roiSize; y += roiSize / 2) {
             for (int x = 0; x < binaryImage.cols() - roiSize; x += roiSize) {
                 roi = new Rect(x, y, roiSize, roiSize);
                 subMat = binaryImage.submat(roi);
-                count = countTransitions(subMat);
 
-                if (count >= 50 && count < 150) {
+                transitionCount = countTransitions(subMat);
+
+                if (transitionCount >= 50 && transitionCount < 150) {
                     subMat.setTo(new Scalar(255));
                     barcodes.add(roi);
                 }
             }
         }
-        barcodes = mergeRectangles(barcodes);
-        printRectangle(barcodes, image);
 
+        barcodes = mergeRectangles(barcodes);
+        drawRectangles(barcodes, image);
     }
 
-    public static void printRectangle(List<Rect> rects, Mat image) {
+    public static void drawRectangles(List<Rect> rects, Mat image) {
         int count = rects.size();
         double summaryArea = 0;
         for (Rect rect : rects) {
@@ -91,7 +90,7 @@ public class BarcodeLocalization {
                 if (merged[j]) continue;
 
                 Rect compare = rects.get(j);
-                if (rectsOverlap(base, compare)) {
+                if (isRectsOverlap(base, compare)) {
                     base = unionRects(base, compare);
                     merged[j] = true;
                 }
@@ -103,7 +102,7 @@ public class BarcodeLocalization {
         return mergedRects;
     }
 
-    private static boolean rectsOverlap(Rect r1, Rect r2) {
+    private static boolean isRectsOverlap(Rect r1, Rect r2) {
         return r1.tl().x <= r2.br().x &&
                 r1.br().x >= r2.tl().x &&
                 r1.tl().y <= r2.br().y &&

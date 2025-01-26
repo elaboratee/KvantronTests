@@ -1,8 +1,11 @@
 package gui;
 
 import exception.ImageReadException;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
 import org.opencv.core.Point;
-import org.opencv.core.*;
+import org.opencv.core.Size;
+import org.opencv.imgproc.CLAHE;
 import org.opencv.imgproc.Imgproc;
 import util.*;
 
@@ -224,10 +227,17 @@ public class LocateCodePanel extends JPanel {
         // Размытие по Гауссу
         Imgproc.GaussianBlur(image, image, new Size(3, 3), 1.5);
 
+        // Конвертация в изображение в оттенках серого
+        Mat grayImage = new Mat();
+        Imgproc.cvtColor(image, grayImage, Imgproc.COLOR_BGR2GRAY);
+
+        // Выравнивание гистограммы
+        CLAHE clahe = Imgproc.createCLAHE(6, new Size(12, 12));
+        clahe.apply(grayImage, grayImage);
+
         // Пороговая обработка
         binaryImage = new Mat();
-        Imgproc.cvtColor(image, binaryImage, Imgproc.COLOR_BGR2GRAY);
-        Imgproc.threshold(binaryImage, binaryImage, 100, 255, Imgproc.THRESH_BINARY);
+        Imgproc.threshold(grayImage, binaryImage, 100, 255, Imgproc.THRESH_BINARY);
 
         // Отображение изображения
         displayImage(binaryImage, locationLabel);
