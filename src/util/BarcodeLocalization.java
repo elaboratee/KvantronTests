@@ -8,60 +8,46 @@ import java.util.List;
 
 public class BarcodeLocalization {
 
-    public static Mat localizeBarcodes(Mat image) {
+    public static void localizeBarcodes(Mat binaryImage, Mat image) {
+
         // Подготовка структур данных
+        Mat kernel = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
+        Imgproc.erode(binaryImage, binaryImage, kernel);
+
         Rect roi;
         Mat subMat;
-        List<Rect> foundRects = new ArrayList<>();
+        int roiSize = 60;
+        int roiArea = roiSize * roiSize;
+
+        List<Rect> detectedRegions = new ArrayList<>();
 
         // Локализация с динамическим подбором размера ядра
-        for (int roiSize = 100, roiArea = roiSize * roiSize; roiSize >= 20; roiSize -= 20) {
-            for (int y = 0; y < image.rows() - roiSize; y += roiSize) {
-                for (int x = 0; x < image.cols() - roiSize; x += roiSize) {
-                    roi = new Rect(x, y, roiSize, roiSize);
-                    subMat = image.submat(roi);
+        for (int y = 0; y < binaryImage.rows() - roiSize; y += roiSize / 4) {
+            for (int x = 0; x < binaryImage.cols() - roiSize; x += roiSize / 3) {
+                roi = new Rect(x, y, roiSize, roiSize);
+                subMat = binaryImage.submat(roi);
 
-                    int blackPixelCount = roiArea - Core.countNonZero(subMat);
-                    if (countTransitions(subMat) >= 75) {
-                        if (blackPixelCount >= roiArea / 2.5) {
-                            if (roiSize == 100) {
-                                foundRects.add(roi);
-                            } else {
-                                int flag = 0;
-                                for (Rect rect : foundRects) {
-                                    if (rect.contains(new Point(roi.x, roi.y)) ||
-                                            rect.contains(new Point(roi.x + roiSize, roi.y + roiSize))) {
-                                        flag = 1;
-                                        break;
-                                    }
-                                }
-                                if (flag == 0) {
-                                    foundRects.add(roi);
-                                }
-                            }
-                        }
+                int blackPixelCount = roiArea - Core.countNonZero(subMat);
+                if (countTransitions(subMat) >= 100 && countTransitions(subMat) < 800) {
+                    if ((blackPixelCount >= roiArea / 2.5) && (blackPixelCount <= roiArea / 1.5)) {
+                        detectedRegions.add(roi);
                     }
                 }
             }
-
-            // Очистка областей с предыдущего шага
-//            if (roiSize != 20) {
-//                List<Rect> filteredRects = new ArrayList<>();
-//                for (Rect rect : foundRects) {
-//                    if (rect.width != roiSize) {
-//                        filteredRects.add(rect);
-//                    }
-//                }
-//                foundRects = filteredRects;
-//            }
         }
+        printRectangle(detectedRegions, image);
+    }
 
-        // Отрисовка найденых областей
-        for (Rect rect : foundRects) {
-            Imgproc.rectangle(image, rect, new Scalar(0, 255, 0), 2);
+    public static void printRectangle(List<Rect> rests, Mat image) {
+        for (Rect rect : rests) {
+            Imgproc.rectangle(
+                    image,
+                    rect.tl(),
+                    rect.br(),
+                    new Scalar(0, 255, 0),
+                    1
+            );
         }
-
-        return image;
     }
 
     private static int countTransitions(Mat squareRegion) {

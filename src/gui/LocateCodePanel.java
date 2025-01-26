@@ -290,6 +290,8 @@ public class LocateCodePanel extends JPanel {
         Core.bitwise_not(dilatedImage, dilatedImage);
         Core.bitwise_or(binaryImage, dilatedImage, subtractImage);
 
+
+
         // Сохранение обработанного изображения
         binaryImage = subtractImage;
 
@@ -304,10 +306,10 @@ public class LocateCodePanel extends JPanel {
         localizeBarcodesButton.setEnabled(false);
 
         // Локализация областей кодов
-        binaryImage = BarcodeLocalization.localizeBarcodes(binaryImage);
+        BarcodeLocalization.localizeBarcodes(binaryImage, image);
 
         // Отображение изображения с областями локализации
-        displayImage(binaryImage, locationLabel);
+        displayImage(image, locationLabel);
         logAction("Выполнена локализация кодов");
 
         morphImageButton.setEnabled(false);
