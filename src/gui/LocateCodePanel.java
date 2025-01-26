@@ -224,6 +224,9 @@ public class LocateCodePanel extends JPanel {
         // Отключение кнопки бинаризации
         binarizeImageButton.setEnabled(false);
 
+        // Размытие по Гауссу
+        Imgproc.GaussianBlur(image, image, new Size(3, 3), 1.5);
+
         // Пороговая обработка
         binaryImage = new Mat();
         Imgproc.cvtColor(image, binaryImage, Imgproc.COLOR_BGR2GRAY);

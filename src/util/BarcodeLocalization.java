@@ -3,36 +3,62 @@ package util;
 import org.opencv.core.*;
 import org.opencv.imgproc.Imgproc;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class BarcodeLocalization {
 
-    private static Mat image;
-
     public static Mat localizeBarcodes(Mat image) {
-        // Подготовка констант
-        final int roiSize = 20;
-        final int roiArea = roiSize * roiSize;
-
-        // Выполнение локализации
+        // Подготовка структур данных
         Rect roi;
         Mat subMat;
-        for (int y = 0; y < image.rows() - roiSize; y += roiSize) {
-            for (int x = 0; x < image.cols() - roiSize; x += roiSize) {
-                roi = new Rect(x, y, roiSize, roiSize);
-                subMat = image.submat(roi);
+        List<Rect> foundRects = new ArrayList<>();
 
-                int blackPixelCount = roiArea - Core.countNonZero(subMat);
-                if (countTransitions(subMat) >= 75) {
-                    if (blackPixelCount >= roiArea / 2.5) {
-                        Imgproc.rectangle(
-                                image,
-                                new Point(x, y),
-                                new Point(x + roiSize, y + roiSize),
-                                new Scalar(0, 255, 0),
-                                2
-                        );
+        // Локализация с динамическим подбором размера ядра
+        for (int roiSize = 100, roiArea = roiSize * roiSize; roiSize >= 20; roiSize -= 20) {
+            for (int y = 0; y < image.rows() - roiSize; y += roiSize) {
+                for (int x = 0; x < image.cols() - roiSize; x += roiSize) {
+                    roi = new Rect(x, y, roiSize, roiSize);
+                    subMat = image.submat(roi);
+
+                    int blackPixelCount = roiArea - Core.countNonZero(subMat);
+                    if (countTransitions(subMat) >= 75) {
+                        if (blackPixelCount >= roiArea / 2.5) {
+                            if (roiSize == 100) {
+                                foundRects.add(roi);
+                            } else {
+                                int flag = 0;
+                                for (Rect rect : foundRects) {
+                                    if (rect.contains(new Point(roi.x, roi.y)) ||
+                                            rect.contains(new Point(roi.x + roiSize, roi.y + roiSize))) {
+                                        flag = 1;
+                                        break;
+                                    }
+                                }
+                                if (flag == 0) {
+                                    foundRects.add(roi);
+                                }
+                            }
+                        }
                     }
                 }
             }
+
+            // Очистка областей с предыдущего шага
+//            if (roiSize != 20) {
+//                List<Rect> filteredRects = new ArrayList<>();
+//                for (Rect rect : foundRects) {
+//                    if (rect.width != roiSize) {
+//                        filteredRects.add(rect);
+//                    }
+//                }
+//                foundRects = filteredRects;
+//            }
+        }
+
+        // Отрисовка найденых областей
+        for (Rect rect : foundRects) {
+            Imgproc.rectangle(image, rect, new Scalar(0, 255, 0), 2);
         }
 
         return image;
