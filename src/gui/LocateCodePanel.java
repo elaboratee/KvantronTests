@@ -285,9 +285,6 @@ public class LocateCodePanel extends JPanel {
         // Отключение кнопки морфологической обработки
         morphImageButton.setEnabled(false);
 
-//        // Удаление крупных шумовых областей
-//        binaryImage = MorphOps.removeLargeBlackAreas(binaryImage);
-
         // Поиск крупных связанных компонент
         Mat componentsImage = MorphOps.findConnectedComponents(binaryImage);
 

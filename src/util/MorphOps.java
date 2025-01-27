@@ -47,19 +47,21 @@ public class MorphOps {
             Mat visited = Mat.zeros(binaryCopy.size(), CvType.CV_8U);
             Mat structElem = Imgproc.getStructuringElement(Imgproc.MORPH_RECT, new Size(3, 3));
 
+            Mat componentMask, prevMask, newMask;
+
             for (int y = 0; y < binaryCopy.rows(); y++) {
                 for (int x = 0; x < binaryCopy.cols(); x++) {
                     // Если пиксель не посещен и является частью объекта
                     if (binaryCopy.get(y, x)[0] == 255 && visited.get(y, x)[0] == 0) {
                         // Создание начальной маски компоненты
-                        Mat componentMask = Mat.zeros(binaryCopy.size(), CvType.CV_8U);
+                        componentMask = Mat.zeros(binaryCopy.size(), CvType.CV_8U);
                         componentMask.put(y, x, 255); // Начальная точка
 
-                        Mat prevMask = Mat.zeros(binaryCopy.size(), CvType.CV_8U);
+                        prevMask = Mat.zeros(binaryCopy.size(), CvType.CV_8U);
 
                         // Итеративное морфологическое расширение
                         while (true) {
-                            Mat newMask = new Mat();
+                            newMask = new Mat();
                             Imgproc.dilate(componentMask, newMask, structElem);
 
                             // Ограничние по бинарному изображению
