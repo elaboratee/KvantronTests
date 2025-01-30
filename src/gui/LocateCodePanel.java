@@ -20,7 +20,7 @@ public class LocateCodePanel extends JPanel {
     private static LocateCodePanel instance;
 
     private final JPanel buttonPanel, imagePanel;
-    private final JLabel locationLabel;
+    public static JLabel locationLabel;
     private JButton loadImageButton, clearPointsButton, recognizeBarcodeButton;
     private JButton binarizeImageButton, localizeBarcodesButton, morphImageButton;
     private final JFileChooser fileChooser;
@@ -324,7 +324,7 @@ public class LocateCodePanel extends JPanel {
         JOptionPane.showMessageDialog(buttonPanel, message, "Ошибка", JOptionPane.ERROR_MESSAGE);
     }
 
-    private void displayImage(Mat image, JLabel label) {
+    public static void displayImage(Mat image, JLabel label) {
         // Преобразование изображения
         BufferedImage bufferedImage = DataConversions.matToBufferedImage(image);
 

@@ -6,72 +6,83 @@ import org.opencv.imgproc.Imgproc;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BarcodeLocalization {
 
+public class BarcodeLocalization {
     public static void localizeBarcodes(Mat binaryImage, Mat image) {
 
         Rect roi;
         Mat subMat;
         int roiSize = 18;
         List<Rect> barcodes = new ArrayList<>();
-        int count;
+        int count = 0;
 
         // Локализация с динамическим подбором размера ядра
         for (int y = 0; y < binaryImage.rows() - roiSize; y += roiSize / 2) {
             for (int x = 0; x < binaryImage.cols() - roiSize; x += roiSize) {
                 roi = new Rect(x, y, roiSize, roiSize);
                 subMat = binaryImage.submat(roi);
-                count = countTransitions(subMat);
+                int transitions = countTransitions(subMat);
 
-                if (count >= 50 && count < 150) {
-                    subMat.setTo(new Scalar(255));
+
+
+
+                if (transitions >= 30 && transitions <= 80) {
+
                     barcodes.add(roi);
                 }
             }
         }
-        barcodes = mergeRectangles(barcodes);
-        printRectangle(barcodes, image);
 
+        barcodes = mergeRectangles(barcodes);
+
+        seekDatamatrix(barcodes, binaryImage);
+
+        printRectangle(barcodes, image);
     }
 
-    public static void printRectangle(List<Rect> rects, Mat image) {
+    public static void seekDatamatrix(List<Rect> barcodes, Mat binaryImage) {
+        for (Rect barcode : barcodes) {
+            Mat BinaryImageROI = new Mat(binaryImage, barcode);
+            MatrixRegionBinary.findLineSupportRegions(BinaryImageROI, 50, 20);
+            MatrixRegionBinary.saveGradientImage();
+        }
+    }
+
+
+
+
+
+    private static double findAverageArea(List<Rect> rects){
         int count = rects.size();
         double summaryArea = 0;
         for (Rect rect : rects) {
             summaryArea += rect.width * rect.height;
         }
-        double averageArea = summaryArea / count;
+        return summaryArea / count;
+    }
 
+
+    public static void printRectangle(List<Rect> rects, Mat image) {
         for (Rect rect : rects) {
-            int currentArea = rect.height * rect.width;
-            if (currentArea > averageArea) {
-                Point topLeft = rect.tl();
-                Point bottomRight = rect.br();
-                topLeft = new Point(topLeft.x - 5, topLeft.y - 5);
-                bottomRight = new Point(bottomRight.x + 5, bottomRight.y + 5);
-                Imgproc.rectangle(
-                        image,
-                        topLeft,
-                        bottomRight,
-                        new Scalar(0, 255, 0),
-                        1
-                );
-            }
+            Point topLeft = rect.tl();
+            Point bottomRight = rect.br();
+            Imgproc.rectangle(
+                    image,
+                    topLeft,
+                    bottomRight,
+                    new Scalar(0, 255, 0),
+                    1
+            );
         }
     }
 
-    private static int countTransitions(Mat squareRegion) {
+    private static int countTransitions(Mat region) {
         int transitions = 0;
-        for (int y = 0; y < squareRegion.rows() - 1; y++) {
-            for (int x = 0; x < squareRegion.cols() - 1; x++) {
-                int currentPixel = (int) squareRegion.get(y, x)[0];
-                int rightPixel = (int) squareRegion.get(y, x + 1)[0];
-                int downPixel = (int) squareRegion.get(y + 1, x)[0];
-
-                if ((currentPixel == 0 && rightPixel == 255) || (currentPixel == 255 && rightPixel == 0)) {
-                    transitions++;
-                }
-                if ((currentPixel == 0 && downPixel == 255) || (currentPixel == 255 && downPixel == 0)) {
+        for (int y = 0; y < region.rows(); y++) {
+            for (int x = 0; x < region.cols() - 1; x++) {
+                int currentPixel = (int) region.get(y, x)[0];
+                int nextPixel = (int) region.get(y, x + 1)[0];
+                if (Math.abs(currentPixel - nextPixel) > 128) { // Пороговое значение
                     transitions++;
                 }
             }
@@ -100,6 +111,19 @@ public class BarcodeLocalization {
             merged[i] = true;
         }
 
+        double averageArea = findAverageArea(mergedRects);
+        for (Rect rect : mergedRects) {
+            int currentArea = rect.height * rect.width;
+            if (currentArea > averageArea) {
+
+                // Добавляем по 10 пикселей ко всем сторонам прямоугольника
+                rect.x -= 10;  // Сдвигаем левый верхний угол на 10 пикселей влево
+                rect.y -= 10;  // Сдвигаем верхний угол на 10 пикселей вверх
+                rect.width += 20;  // Увеличиваем ширину на 20 пикселей (по 10 с каждой стороны)
+                rect.height += 20;  // Увеличиваем высоту на 20 пикселей (по 10 сверху и снизу)
+
+            }
+        }
         return mergedRects;
     }
 
@@ -118,4 +142,6 @@ public class BarcodeLocalization {
         return new Rect(new Point(x1, y1), new Point(x2, y2));
     }
 }
+
+
 
